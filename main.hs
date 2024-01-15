@@ -49,7 +49,7 @@ evaluate :: Term -> Maybe Natural
 evaluate (Single i) = Just i
 evaluate (Term Plus left right) = join $ liftA2 add (evaluate left) (evaluate right)
   where
-    add x y | x > y = Just $ x + y
+    add x y | x >= y = Just $ x + y
     add _ _ = Nothing
 evaluate (Term Minus left right) = join $ liftA2 minus (evaluate left) (evaluate right)
   where
@@ -59,8 +59,8 @@ evaluate (Term Times left right) = join $ liftA2 times (evaluate left) (evaluate
   where
     times 1 _ = Nothing
     times _ 1 = Nothing
-    times x y | x > y = Nothing
-    times x y = Just $ x * y
+    times x y | x >= y = Just $ x * y
+    times _ _ = Nothing
 evaluate (Term Div left right) = join $ liftA2 div (evaluate left) (evaluate right)
   where
     div _ 0 = Nothing
