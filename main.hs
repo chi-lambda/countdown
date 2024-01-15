@@ -70,9 +70,9 @@ evaluate (Term Div left right) = join $ liftA2 div (evaluate left) (evaluate rig
        in if m == 0 then Just d else Nothing
 
 parse :: String -> (Natural, [Natural])
-parse = headTail . map read . words
+parse = initLast . map read . words
   where
-    headTail xs = (head xs, tail xs)
+    initLast xs = (last xs, init xs)
 
 subdivide :: [Natural] -> [([Natural], [Natural])]
 subdivide numbers =
