@@ -6,11 +6,11 @@ import Data.Array.IArray (Array, (!))
 import Data.Array.IArray qualified as A
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
+import Data.Maybe (fromJust)
 import Data.Set (Set)
 import Data.Set qualified as S
 import Numeric.Natural (Natural)
 import Prelude hiding (div)
-import Data.Maybe (fromJust)
 
 data Operation = Plus | Minus | Times | Div deriving (Eq, Enum, Ord)
 
@@ -37,7 +37,7 @@ instance Ord Term where
 data Result = Result Term Natural Natural deriving (Eq)
 
 instance Show Result where
-  show (Result term result _) = show result ++ " = " ++ show term
+  show (Result term result weight) = show result ++ " (" ++ show weight ++ ")" ++ " = " ++ show term
 
 instance Ord Result where
   compare (Result term result weight) (Result term' result' weight') = compare result result' <> compare weight weight' <> compare term term'
@@ -67,7 +67,7 @@ evaluate (Term Div left right) = join $ liftA2 div (evaluate left) (evaluate rig
     div _ 1 = Nothing
     div x y =
       let (d, m) = x `divMod` y
-        in if m == 0 then Just d else Nothing
+       in if m == 0 then Just d else Nothing
 
 parse :: String -> (Natural, [Natural])
 parse = headTail . map read . words
@@ -125,4 +125,9 @@ showMaybeList Nothing = "No solution"
 showMaybeList (Just xs) = unlines $ map show xs
 
 main :: IO ()
-main = interact $ showMaybeList . uncurry solve . parse
+main = loop
+  where
+    loop = do
+      line <- getLine
+      putStrLn . showMaybeList . uncurry solve . parse $ line
+      loop
