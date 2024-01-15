@@ -1,0 +1,9 @@
+{
+    "files.exclude": {
+        "**/*.exe": true,
+        "**/*.hi": true,
+        "**/*.o": true,
+        "**/.vscode/": true
+    },
+    "files.eol": "\n"
+}
