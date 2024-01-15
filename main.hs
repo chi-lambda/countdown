@@ -125,9 +125,4 @@ showMaybeList Nothing = "No solution"
 showMaybeList (Just xs) = unlines $ map show xs
 
 main :: IO ()
-main = loop
-  where
-    loop = do
-      line <- getLine
-      putStrLn . showMaybeList . uncurry solve . parse $ line
-      loop
+main = getContents >>= putStrLn . unlines . map (showMaybeList . uncurry solve . parse) . lines
