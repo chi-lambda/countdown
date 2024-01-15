@@ -10,6 +10,7 @@ import Data.Set (Set)
 import Data.Set qualified as S
 import Numeric.Natural (Natural)
 import Prelude hiding (div)
+import Data.Maybe (fromJust)
 
 data Operation = Plus | Minus | Times | Div deriving (Eq, Enum, Ord)
 
@@ -22,13 +23,13 @@ instance Show Operation where
 data Term = Term Operation Term Term | Single Natural deriving (Eq)
 
 instance Show Term where
-  show (Term op left right) = "(" ++ show left ++ show op ++ show right ++ ")"
+  show t@(Term op left right) = "(" ++ show left ++ " " ++ show op ++ " " ++ show right ++ " = " ++ show (fromJust $ evaluate t) ++ ")"
   show (Single i) = show i
 
 instance Ord Term where
   compare term term' = compare (op term) (op term') <> foldr (<>) EQ (zipWith compare (digits term) (digits term'))
     where
-      op (Single _)= Plus
+      op (Single _) = Plus
       op (Term o _ _) = o
       digits (Single i) = [i]
       digits (Term _ left right) = digits left ++ digits right
@@ -43,29 +44,30 @@ instance Ord Result where
 
 evaluate' :: Term -> (Term, Maybe Natural, Natural)
 evaluate' term = (term, evaluate term, size term)
+
+evaluate :: Term -> Maybe Natural
+evaluate (Single i) = Just i
+evaluate (Term Plus left right) = join $ liftA2 add (evaluate left) (evaluate right)
   where
-    evaluate (Single i) = Just i
-    evaluate (Term Plus left right) = join $ liftA2 add (evaluate left) (evaluate right)
-      where
-        add x y | x > y = Just $ x + y
-        add _ _ = Nothing
-    evaluate (Term Minus left right) = join $ liftA2 minus (evaluate left) (evaluate right)
-      where
-        minus x y | x > y = Just $ x - y
-        minus _ _ = Nothing
-    evaluate (Term Times left right) = join $ liftA2 times (evaluate left) (evaluate right)
-      where
-        times 1 _ = Nothing
-        times _ 1 = Nothing
-        times x y | x > y = Nothing
-        times x y = Just $ x * y
-    evaluate (Term Div left right) = join $ liftA2 div (evaluate left) (evaluate right)
-      where
-        div _ 0 = Nothing
-        div _ 1 = Nothing
-        div x y =
-          let (d, m) = x `divMod` y
-           in if m == 0 then Just d else Nothing
+    add x y | x > y = Just $ x + y
+    add _ _ = Nothing
+evaluate (Term Minus left right) = join $ liftA2 minus (evaluate left) (evaluate right)
+  where
+    minus x y | x > y = Just $ x - y
+    minus _ _ = Nothing
+evaluate (Term Times left right) = join $ liftA2 times (evaluate left) (evaluate right)
+  where
+    times 1 _ = Nothing
+    times _ 1 = Nothing
+    times x y | x > y = Nothing
+    times x y = Just $ x * y
+evaluate (Term Div left right) = join $ liftA2 div (evaluate left) (evaluate right)
+  where
+    div _ 0 = Nothing
+    div _ 1 = Nothing
+    div x y =
+      let (d, m) = x `divMod` y
+        in if m == 0 then Just d else Nothing
 
 parse :: String -> (Natural, [Natural])
 parse = headTail . map read . words
