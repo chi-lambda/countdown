@@ -108,7 +108,6 @@ firstNonEmpty s =
     Just (m, rest) -> if S.null m then firstNonEmpty rest else Just m
     Nothing -> Nothing
 
--- solve :: Natural -> [Natural] -> Maybe Result
 solve :: Natural -> [Natural] -> Maybe [Result]
 solve target numbers =
   let ts = terms numbers
