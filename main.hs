@@ -111,10 +111,10 @@ firstNonEmpty s =
 solve :: Natural -> [Natural] -> Maybe [Result]
 solve target numbers =
   let ts = terms numbers
-      absDiff x y | x > y = x - y
-      absDiff x y = y - x
-      results = map (uncurry3 Result) $ filter ((<= 10) . absDiff target . snd3) $ catSndMaybes $ map evaluate' ts
-      byScore = [((absDiff target result, weight), r) | r@(Result _ result weight) <- results]
+      d x y | x > y = x - y
+      d x y = y - x
+      results = map (uncurry3 Result) $ filter ((<= 10) . d target . snd3) $ catSndMaybes $ map evaluate' ts
+      byScore = [((d target result, weight), r) | r@(Result _ result weight) <- results]
       arr = A.accumArray (flip S.insert) S.empty ((0, 1), (10, 6)) byScore :: Array (Natural, Natural) (Set Result)
       mapped = M.fromList [((score, weight), arr ! (score, weight)) | score <- [0 .. 10], weight <- [1 .. 6]]
    in S.toList <$> firstNonEmpty mapped
