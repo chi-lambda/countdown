@@ -88,6 +88,7 @@ subdivide numbers =
    in divisions
 
 terms :: [Natural] -> [Term]
+terms [i] = [Single i]
 terms xs = [Single i | i <- xs] ++ [Term op leftTerm rightTerm | op <- [Plus .. Div], (left, right) <- subdivide xs, leftTerm <- terms left, rightTerm <- terms right]
 
 snd3 :: (a, b, c) -> b
