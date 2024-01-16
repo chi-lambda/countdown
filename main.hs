@@ -87,10 +87,6 @@ subdivide numbers =
       divisions = map (bitsplit numbers ([], [])) [1 .. num - 2]
    in divisions
 
-terms :: [Natural] -> [Term]
-terms [i] = [Single i]
-terms xs = [Single i | i <- xs] ++ [Term op leftTerm rightTerm | op <- [Plus .. Div], (left, right) <- subdivide xs, leftTerm <- terms left, rightTerm <- terms right]
-
 snd3 :: (a, b, c) -> b
 snd3 (_, x, _) = x
 
@@ -112,6 +108,8 @@ solve target numbers =
       byScore = [((d target result, weight), r) | r@(Result _ result weight) <- results]
       arr = A.accumArray (flip S.insert) S.empty ((0, 1), (10, 6)) byScore :: Array (Natural, Natural) (Set Result)
       mapped = M.fromList [((score, weight), arr ! (score, weight)) | score <- [0 .. 10], weight <- [1 .. 6]]
+      terms [i] = [Single i]
+      terms xs = [Single i | i <- xs] ++ [Term op leftTerm rightTerm | op <- [Plus .. Div], (left, right) <- subdivide xs, leftTerm <- terms left, rightTerm <- terms right]
    in S.toList <$> firstNonEmpty mapped
 
 showMaybeList :: Maybe [Result] -> String
