@@ -4,9 +4,10 @@ import Control.Applicative (liftA2)
 import Control.Monad (join)
 import Data.Array.IArray (Array, (!))
 import Data.Array.IArray qualified as A
+import Data.Functor ((<&>))
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, mapMaybe)
 import Data.Set (Set)
 import Data.Set qualified as S
 import Numeric.Natural (Natural)
@@ -42,8 +43,11 @@ instance Show Result where
 instance Ord Result where
   compare (Result term result weight) (Result term' result' weight') = compare result result' <> compare weight weight' <> compare term term'
 
-evaluate' :: Term -> (Term, Maybe Natural, Natural)
-evaluate' term = (term, evaluate term, size term)
+evaluate' :: Term -> Maybe (Term, Natural, Natural)
+evaluate' term = evaluate term <&> (term,,size term)
+  where
+    size (Single _) = 1
+    size (Term _ left right) = size left + size right
 
 evaluate :: Term -> Maybe Natural
 evaluate (Single i) = Just i
@@ -86,20 +90,11 @@ subdivide numbers =
 terms :: [Natural] -> [Term]
 terms xs = [Single i | i <- xs] ++ [Term op leftTerm rightTerm | op <- [Plus .. Div], (left, right) <- subdivide xs, leftTerm <- terms left, rightTerm <- terms right]
 
-size :: Term -> Natural
-size (Single _) = 1
-size (Term _ left right) = size left + size right
-
 snd3 :: (a, b, c) -> b
 snd3 (_, x, _) = x
 
 uncurry3 :: (t1 -> t2 -> t3 -> t4) -> (t1, t2, t3) -> t4
 uncurry3 f (x, y, z) = f x y z
-
-catSndMaybes :: [(a, Maybe b, c)] -> [(a, b, c)]
-catSndMaybes [] = []
-catSndMaybes ((_, Nothing, _) : xs) = catSndMaybes xs
-catSndMaybes ((a, Just fa, s) : xs) = (a, fa, s) : catSndMaybes xs
 
 firstNonEmpty :: Map (Natural, Natural) (Set Result) -> Maybe (Set Result)
 firstNonEmpty s =
@@ -112,7 +107,7 @@ solve target numbers =
   let ts = terms numbers
       d x y | x > y = x - y
       d x y = y - x
-      results = map (uncurry3 Result) $ filter ((<= 10) . d target . snd3) $ catSndMaybes $ map evaluate' ts
+      results = map (uncurry3 Result) $ filter ((<= 10) . d target . snd3) $ mapMaybe evaluate' ts
       byScore = [((d target result, weight), r) | r@(Result _ result weight) <- results]
       arr = A.accumArray (flip S.insert) S.empty ((0, 1), (10, 6)) byScore :: Array (Natural, Natural) (Set Result)
       mapped = M.fromList [((score, weight), arr ! (score, weight)) | score <- [0 .. 10], weight <- [1 .. 6]]
