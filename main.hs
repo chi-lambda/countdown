@@ -7,7 +7,7 @@ import Data.Array.IArray qualified as A
 import Data.Functor ((<&>))
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
-import Data.Maybe (fromJust, mapMaybe)
+import Data.Maybe (mapMaybe)
 import Data.Set (Set)
 import Data.Set qualified as S
 import Numeric.Natural (Natural)
@@ -24,7 +24,7 @@ instance Show Operation where
 data Term = Term Operation Term Term | Single Natural deriving (Eq)
 
 instance Show Term where
-  show t@(Term op left right) = "(" ++ show left ++ " " ++ show op ++ " " ++ show right ++ " = " ++ show (fromJust $ evaluate t) ++ ")"
+  show t@(Term op left right) = "(" ++ show left ++ " " ++ show op ++ " " ++ show right ++ " = " ++ maybe "_" show (evaluate t) ++ ")"
   show (Single i) = show i
 
 instance Ord Term where
