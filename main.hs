@@ -4,7 +4,9 @@ import Control.Applicative (liftA2)
 import Control.Monad (join)
 import Data.Array.IArray (Array, (!))
 import Data.Array.IArray qualified as A
+import Data.Bifunctor (bimap)
 import Data.Functor ((<&>))
+import Data.List (sort)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
 import Data.Maybe (mapMaybe)
@@ -78,15 +80,6 @@ parse = initLast . map read . words
   where
     initLast xs = (last xs, init xs)
 
-subdivide :: [Natural] -> [([Natural], [Natural])]
-subdivide numbers =
-  let len = length numbers
-      num = 2 ^ len :: Int
-      bitsplit [] result _ = result
-      bitsplit (x : xs) (r1, r2) n = let (d, m) = n `divMod` 2 in if even m then bitsplit xs (x : r1, r2) d else bitsplit xs (r1, x : r2) d
-      divisions = map (bitsplit numbers ([], [])) [1 .. num - 2]
-   in divisions
-
 snd3 :: (a, b, c) -> b
 snd3 (_, x, _) = x
 
@@ -110,6 +103,13 @@ solve target numbers =
       mapped = M.fromList [((score, weight), arr ! (score, weight)) | score <- [0 .. 10], weight <- [1 .. 6]]
       terms [i] = [Single i]
       terms xs = [Single i | i <- xs] ++ [Term op leftTerm rightTerm | op <- [Plus .. Div], (left, right) <- subdivide xs, leftTerm <- terms left, rightTerm <- terms right]
+      subdivide numbers' =
+        let len = length numbers'
+            num = 2 ^ len :: Int
+            bitsplit [] result _ = bimap sort sort result
+            bitsplit (x : xs) (r1, r2) n = let (q, m) = n `divMod` 2 in if even m then bitsplit xs (x : r1, r2) q else bitsplit xs (r1, x : r2) q
+            divisions = map (bitsplit numbers' ([], [])) [1 .. num - 2]
+         in divisions
    in S.toList <$> firstNonEmpty mapped
 
 showMaybeList :: Maybe [Result] -> String
