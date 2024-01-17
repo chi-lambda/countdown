@@ -92,6 +92,19 @@ firstNonEmpty s =
     Just (m, rest) -> if S.null m then firstNonEmpty rest else Just m
     Nothing -> Nothing
 
+terms :: [Natural] -> [Term]
+terms [i] = [Single i]
+terms xs = [Single i | i <- xs] ++ [Term op leftTerm rightTerm | op <- [Plus .. Div], (left, right) <- subdivide xs, leftTerm <- terms left, rightTerm <- terms right]
+
+subdivide :: [Natural] -> [([Natural], [Natural])]
+subdivide numbers' =
+  let len = length numbers'
+      num = 2 ^ len :: Int
+      bitsplit [] result _ = bimap sort sort result
+      bitsplit (x : xs) (r1, r2) n = let (q, m) = n `divMod` 2 in if even m then bitsplit xs (x : r1, r2) q else bitsplit xs (r1, x : r2) q
+      divisions = map (bitsplit numbers' ([], [])) [1 .. num - 2]
+   in divisions
+
 solve :: Natural -> [Natural] -> Maybe [Result]
 solve target numbers =
   let ts = terms numbers
@@ -101,15 +114,6 @@ solve target numbers =
       byScore = [((d target result, weight), r) | r@(Result _ result weight) <- results]
       arr = A.accumArray (flip S.insert) S.empty ((0, 1), (10, 6)) byScore :: Array (Natural, Natural) (Set Result)
       mapped = M.fromList [((score, weight), arr ! (score, weight)) | score <- [0 .. 10], weight <- [1 .. 6]]
-      terms [i] = [Single i]
-      terms xs = [Single i | i <- xs] ++ [Term op leftTerm rightTerm | op <- [Plus .. Div], (left, right) <- subdivide xs, leftTerm <- terms left, rightTerm <- terms right]
-      subdivide numbers' =
-        let len = length numbers'
-            num = 2 ^ len :: Int
-            bitsplit [] result _ = bimap sort sort result
-            bitsplit (x : xs) (r1, r2) n = let (q, m) = n `divMod` 2 in if even m then bitsplit xs (x : r1, r2) q else bitsplit xs (r1, x : r2) q
-            divisions = map (bitsplit numbers' ([], [])) [1 .. num - 2]
-         in divisions
    in S.toList <$> firstNonEmpty mapped
 
 showMaybeList :: Maybe [Result] -> String
