@@ -43,7 +43,7 @@ instance Show CDNum where
   show (CDNum i) = show i
 
 instance Enum CDNum where
-  succ n | n <= CDNum 10 = n + CDNum 11
+  succ n | n <= CDNum 10 = n + CDNum 1
   succ 10 = 25
   succ 25 = 50
   succ 50 = 75
@@ -53,19 +53,19 @@ instance Enum CDNum where
   pred 75 = 50
   pred 50 = 25
   pred 25 = 10
-  pred n | n >= 1 && n <= 10 = n - 1
+  pred n | n <= 10 = n - 1
   pred i = error $ "invalid CountdownNumber " ++ show i ++ " - 1"
-  toEnum n | n < 10 = CDNum (n + 1)
-  toEnum 10 = CDNum 25
-  toEnum 11 = CDNum 50
-  toEnum 12 = CDNum 75
-  toEnum 13 = CDNum 100
+  toEnum n | n <= 10 = CDNum n
+  toEnum 11 = CDNum 25
+  toEnum 12 = CDNum 50
+  toEnum 13 = CDNum 75
+  toEnum 14 = CDNum 100
   toEnum n = error $ "invalid index " ++ show n
-  fromEnum (CDNum i) | i <= 10 = i - 1
-  fromEnum (CDNum 25) = 10
-  fromEnum (CDNum 50) = 11
-  fromEnum (CDNum 75) = 12
-  fromEnum (CDNum 100) = 13
+  fromEnum (CDNum i) | i <= 10 = i
+  fromEnum (CDNum 25) = 11
+  fromEnum (CDNum 50) = 12
+  fromEnum (CDNum 75) = 13
+  fromEnum (CDNum 100) = 14
   fromEnum i = error $ "invalid CountdownNumber " ++ show i
 
 instance Ix CDNum where
@@ -128,6 +128,7 @@ firstNonEmpty s =
     Just (m, rest) -> if S.null m then firstNonEmpty rest else Just m
     Nothing -> Nothing
 
+{-# INLINE toTuple #-}
 toTuple :: (Num a) => [a] -> (a, a, a, a, a)
 toTuple [a] = (a, 0, 0, 0, 0)
 toTuple [a, b] = (a, b, 0, 0, 0)
