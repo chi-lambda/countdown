@@ -134,7 +134,7 @@ toTuple [a, b] = (a, b, 0, 0, 0)
 toTuple [a, b, c] = (a, b, c, 0, 0)
 toTuple [a, b, c, d] = (a, b, c, d, 0)
 toTuple [a, b, c, d, e] = (a, b, c, d, e)
-toTuple xs = error $ "toTuple: list of lenght " ++ show (length xs)
+toTuple xs = error $ "toTuple: list of length " ++ show (length xs)
 
 terms :: [CDNum] -> [Term]
 terms = terms'
