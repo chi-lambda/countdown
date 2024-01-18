@@ -102,9 +102,9 @@ evaluate Div left right = div (value left) (value right)
       let (d, m) = x `divMod` y
        in if m == 0 then Just d else Nothing
 
-evaluate' :: Term -> (Term, Int, Int)
-evaluate' t@(Single (CDNum i)) = (t, i, 1)
-evaluate' t@(Term _ _ _ v) = (t, v, size t)
+toResult :: Term -> Result
+toResult t@(Single (CDNum i)) = Result t i 1
+toResult t@(Term _ _ _ v) = Result t v (size t)
   where
     size (Single _) = 1
     size (Term _ left right _) = size left + size right
@@ -113,12 +113,6 @@ parse :: String -> (Int, [CDNum])
 parse = initLast . map read . words
   where
     initLast xs = (last xs, map CDNum $ init xs)
-
-snd3 :: (a, b, c) -> b
-snd3 (_, x, _) = x
-
-uncurry3 :: (t1 -> t2 -> t3 -> t4) -> (t1, t2, t3) -> t4
-uncurry3 f (x, y, z) = f x y z
 
 firstNonEmpty :: Map (Int, Int) (Set Result) -> Maybe (Set Result)
 firstNonEmpty s =
@@ -169,8 +163,9 @@ solve target numbers =
   let ts = terms numbers
       d x y | x > y = x - y
       d x y = y - x
-      results = map (uncurry3 Result) $ filter ((<= 10) . d target . snd3) $ map evaluate' ts
-      byScore = [((d target result, weight), r) | r@(Result _ result weight) <- results]
+      result (Result _ r _) = r
+      results = filter ((<= 10) . d target . result) $ map toResult ts
+      byScore = [((d target val, weight), r) | r@(Result _ val weight) <- results]
       arr = A.accumArray (flip S.insert) S.empty ((0, 1), (10, 6)) byScore :: Array (Int, Int) (Set Result)
       mapped = M.fromList [((score, weight), arr ! (score, weight)) | score <- [0 .. 10], weight <- [1 .. 6]]
    in S.toList <$> firstNonEmpty mapped
