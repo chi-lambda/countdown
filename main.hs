@@ -30,12 +30,10 @@ instance Show Term where
   show (Single i) = show i
 
 instance Ord Term where
-  compare term term' = compare (op term) (op term') <> foldr (<>) EQ (zipWith compare (digits term) (digits term'))
-    where
-      op (Single _) = Plus
-      op (Term o _ _) = o
-      digits (Single i) = [i]
-      digits (Term _ left right) = digits left ++ digits right
+  compare (Single i) (Single j) = compare i j
+  compare (Single _) (Term {}) = LT
+  compare (Term {}) (Single _) = GT
+  compare (Term op left right) (Term op' left' right') = compare op op' <> compare left left' <> compare right right'
 
 newtype CDNum = CDNum Int deriving (Eq, Ord, Num)
 
