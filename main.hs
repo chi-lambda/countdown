@@ -104,7 +104,7 @@ evaluate Div left right = div (value left) (value right)
 
 evaluate' :: Term -> (Term, Int, Int)
 evaluate' t@(Single (CDNum i)) = (t, i, 1)
-evaluate' t@(Term _ _ _ v) = (t,v,size t)
+evaluate' t@(Term _ _ _ v) = (t, v, size t)
   where
     size (Single _) = 1
     size (Term _ left right _) = size left + size right
@@ -145,7 +145,15 @@ terms = terms'
     terms'' = (memo !) . toTuple
     terms' :: [CDNum] -> [Term]
     terms' [i] = [Single i]
-    terms' xs = [Single i | i <- xs] ++ [Term op leftTerm rightTerm v | op <- [Plus .. Div], (left, right) <- subdivide xs, leftTerm <- terms'' left, rightTerm <- terms'' right, Just v <- [evaluate op leftTerm rightTerm]]
+    terms' xs =
+      [Single i | i <- xs]
+        ++ [ Term op leftTerm rightTerm v
+             | op <- [Plus .. Div],
+               (left, right) <- subdivide xs,
+               leftTerm <- terms'' left,
+               rightTerm <- terms'' right,
+               Just v <- [evaluate op leftTerm rightTerm]
+           ]
 
 subdivide :: [CDNum] -> [([CDNum], [CDNum])]
 subdivide numbers' =
