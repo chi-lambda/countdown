@@ -1,4 +1,4 @@
-module Main (main, CDNum(CDNum)) where
+module Main (main) where
 
 import Control.Applicative (liftA2)
 import Control.Monad (join)
@@ -13,10 +13,7 @@ import Data.Map.Strict qualified as M
 import Data.Maybe (mapMaybe)
 import Data.Set (Set)
 import Data.Set qualified as S
-import Debug.Trace (traceShow)
-import Numeric.Natural (Natural)
 import Prelude hiding (div)
-import qualified Data.Ix as I
 
 data Operation = Plus | Minus | Times | Div deriving (Eq, Enum, Ord)
 
@@ -73,7 +70,7 @@ instance Enum CDNum where
 
 instance Ix CDNum where
   range (l, u) = [l .. u]
-  index (CDNum m, _n) (CDNum i) = i - m
+  index (m, _n) i = fromEnum i - fromEnum m
   inRange (l, u) m = l <= m && m <= u
 
 data Result = Result Term Int Int deriving (Eq)
@@ -139,12 +136,13 @@ toTuple [a, b, c, d] = (a, b, c, d, 0)
 toTuple [a, b, c, d, e] = (a, b, c, d, e)
 toTuple xs = error $ "toTuple: list of lenght " ++ show (length xs)
 
-terms = terms''
+terms :: [CDNum] -> [Term]
+terms = terms'
   where
     bounds = ((CDNum 0, CDNum 0, CDNum 0, CDNum 0, CDNum 0), (CDNum 100, CDNum 100, CDNum 100, CDNum 100, CDNum 100))
     range = [CDNum 0 .. CDNum 100]
     memo :: Array (CDNum, CDNum, CDNum, CDNum, CDNum) [Term]
-    memo = traceShow (I.range bounds) A.array bounds [((a, b, c, d, e), terms' (filter (/= CDNum 0) [a, b, c, d, e])) | a <- range, b <- range, c <- range, d <- range, e <- range]
+    memo = A.array bounds [((a, b, c, d, e), terms' (filter (/= CDNum 0) [a, b, c, d, e])) | a <- range, b <- range, c <- range, d <- range, e <- range]
     terms'' = (memo !) . toTuple
     terms' :: [CDNum] -> [Term]
     terms' [i] = [Single i]
