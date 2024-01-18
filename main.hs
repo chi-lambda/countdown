@@ -1,16 +1,12 @@
 module Main (main) where
 
-import Control.Applicative (liftA2)
-import Control.Monad (join)
 import Data.Array.IArray (Array, (!))
 import Data.Array.IArray qualified as A
 import Data.Bifunctor (bimap)
-import Data.Functor ((<&>))
 import Data.Ix (Ix)
 import Data.List (sort)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
-import Data.Maybe (mapMaybe)
 import Data.Set (Set)
 import Data.Set qualified as S
 import Prelude hiding (div)
@@ -23,17 +19,17 @@ instance Show Operation where
   show Times = "*"
   show Div = "/"
 
-data Term = Term Operation Term Term | Single CDNum deriving (Eq)
+data Term = Term Operation Term Term Int | Single CDNum deriving (Eq)
 
 instance Show Term where
-  show t@(Term op left right) = "(" ++ show left ++ " " ++ show op ++ " " ++ show right ++ " = " ++ maybe "_" show (evaluate t) ++ ")"
+  show (Term op left right v) = "(" ++ show left ++ " " ++ show op ++ " " ++ show right ++ " = " ++ show v ++ ")"
   show (Single i) = show i
 
 instance Ord Term where
   compare (Single i) (Single j) = compare i j
   compare (Single _) (Term {}) = LT
   compare (Term {}) (Single _) = GT
-  compare (Term op left right) (Term op' left' right') = compare op op' <> compare left left' <> compare right right'
+  compare (Term op left right _) (Term op' left' right' _) = compare op op' <> compare left left' <> compare right right'
 
 newtype CDNum = CDNum Int deriving (Eq, Ord, Num)
 
@@ -79,35 +75,39 @@ instance Show Result where
 instance Ord Result where
   compare (Result term result weight) (Result term' result' weight') = compare result result' <> compare weight weight' <> compare term term'
 
-evaluate' :: Term -> Maybe (Term, Int, Int)
-evaluate' term = evaluate term <&> (term,,size term)
-  where
-    size (Single _) = 1
-    size (Term _ left right) = size left + size right
+value :: Term -> Int
+value (Single (CDNum i)) = i
+value (Term _ _ _ v) = v
 
-evaluate :: Term -> Maybe Int
-evaluate (Single (CDNum i)) = Just i
-evaluate (Term Plus left right) = join $ liftA2 add (evaluate left) (evaluate right)
+evaluate :: Operation -> Term -> Term -> Maybe Int
+evaluate Plus left right = add (value left) (value right)
   where
     add x y | x >= y = Just $ x + y
     add _ _ = Nothing
-evaluate (Term Minus left right) = join $ liftA2 minus (evaluate left) (evaluate right)
+evaluate Minus left right = minus (value left) (value right)
   where
     minus x y | x > y = Just $ x - y
     minus _ _ = Nothing
-evaluate (Term Times left right) = join $ liftA2 times (evaluate left) (evaluate right)
+evaluate Times left right = times (value left) (value right)
   where
     times 1 _ = Nothing
     times _ 1 = Nothing
     times x y | x >= y = Just $ x * y
     times _ _ = Nothing
-evaluate (Term Div left right) = join $ liftA2 div (evaluate left) (evaluate right)
+evaluate Div left right = div (value left) (value right)
   where
     div _ 0 = Nothing
     div _ 1 = Nothing
     div x y =
       let (d, m) = x `divMod` y
        in if m == 0 then Just d else Nothing
+
+evaluate' :: Term -> (Term, Int, Int)
+evaluate' t@(Single (CDNum i)) = (t, i, 1)
+evaluate' t@(Term _ _ _ v) = (t,v,size t)
+  where
+    size (Single _) = 1
+    size (Term _ left right _) = size left + size right
 
 parse :: String -> (Int, [CDNum])
 parse = initLast . map read . words
@@ -145,7 +145,7 @@ terms = terms'
     terms'' = (memo !) . toTuple
     terms' :: [CDNum] -> [Term]
     terms' [i] = [Single i]
-    terms' xs = [Single i | i <- xs] ++ [Term op leftTerm rightTerm | op <- [Plus .. Div], (left, right) <- subdivide xs, leftTerm <- terms'' left, rightTerm <- terms'' right]
+    terms' xs = [Single i | i <- xs] ++ [Term op leftTerm rightTerm v | op <- [Plus .. Div], (left, right) <- subdivide xs, leftTerm <- terms'' left, rightTerm <- terms'' right, Just v <- [evaluate op leftTerm rightTerm]]
 
 subdivide :: [CDNum] -> [([CDNum], [CDNum])]
 subdivide numbers' =
@@ -161,7 +161,7 @@ solve target numbers =
   let ts = terms numbers
       d x y | x > y = x - y
       d x y = y - x
-      results = map (uncurry3 Result) $ filter ((<= 10) . d target . snd3) $ mapMaybe evaluate' ts
+      results = map (uncurry3 Result) $ filter ((<= 10) . d target . snd3) $ map evaluate' ts
       byScore = [((d target result, weight), r) | r@(Result _ result weight) <- results]
       arr = A.accumArray (flip S.insert) S.empty ((0, 1), (10, 6)) byScore :: Array (Int, Int) (Set Result)
       mapped = M.fromList [((score, weight), arr ! (score, weight)) | score <- [0 .. 10], weight <- [1 .. 6]]
