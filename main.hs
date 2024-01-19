@@ -10,6 +10,7 @@ import Data.Map.Strict qualified as M
 import Data.Set (Set)
 import Data.Set qualified as S
 import Prelude hiding (div)
+import Numeric.Natural (Natural)
 
 data Operation = Plus | Minus | Times | Div deriving (Eq, Enum, Ord)
 
@@ -19,7 +20,7 @@ instance Show Operation where
   show Times = "*"
   show Div = "/"
 
-data Term = Term Operation Term Term Int | Single CDNum deriving (Eq)
+data Term = Term Operation Term Term Natural | Single CDNum deriving (Eq)
 
 instance Show Term where
   show (Term op left right v) = "(" ++ show left ++ " " ++ show op ++ " " ++ show right ++ " = " ++ show v ++ ")"
@@ -31,7 +32,7 @@ instance Ord Term where
   compare (Term {}) (Single _) = GT
   compare (Term op left right _) (Term op' left' right' _) = compare op op' <> compare left left' <> compare right right'
 
-newtype CDNum = CDNum Int deriving (Eq, Ord, Num)
+newtype CDNum = CDNum Natural deriving (Eq, Ord, Num)
 
 instance Show CDNum where
   show (CDNum i) = show i
@@ -49,13 +50,13 @@ instance Enum CDNum where
   pred 25 = 10
   pred n | n <= 10 = n - 1
   pred i = error $ "invalid CountdownNumber " ++ show i ++ " - 1"
-  toEnum n | n <= 10 = CDNum n
+  toEnum n | n <= 10 = fromIntegral n
   toEnum 11 = CDNum 25
   toEnum 12 = CDNum 50
   toEnum 13 = CDNum 75
   toEnum 14 = CDNum 100
   toEnum n = error $ "invalid index " ++ show n
-  fromEnum (CDNum i) | i <= 10 = i
+  fromEnum (CDNum i) | i <= 10 = fromIntegral i
   fromEnum (CDNum 25) = 11
   fromEnum (CDNum 50) = 12
   fromEnum (CDNum 75) = 13
@@ -67,7 +68,7 @@ instance Ix CDNum where
   index (m, _n) i = fromEnum i - fromEnum m
   inRange (l, u) m = l <= m && m <= u
 
-data Result = Result Term Int Int deriving (Eq)
+data Result = Result Term Natural Natural deriving (Eq)
 
 instance Show Result where
   show (Result term result weight) = show result ++ " (" ++ show weight ++ ")" ++ " = " ++ show term
@@ -75,11 +76,11 @@ instance Show Result where
 instance Ord Result where
   compare (Result term result weight) (Result term' result' weight') = compare result result' <> compare weight weight' <> compare term term'
 
-value :: Term -> Int
+value :: Term -> Natural
 value (Single (CDNum i)) = i
 value (Term _ _ _ v) = v
 
-evaluate :: Operation -> Term -> Term -> Maybe Int
+evaluate :: Operation -> Term -> Term -> Maybe Natural
 evaluate Plus left right = add (value left) (value right)
   where
     add x y | x >= y = Just $ x + y
@@ -109,12 +110,12 @@ toResult t@(Term _ _ _ v) = Result t v (size t)
     size (Single _) = 1
     size (Term _ left right _) = size left + size right
 
-parse :: String -> (Int, [CDNum])
+parse :: String -> (Natural, [CDNum])
 parse = initLast . map read . words
   where
     initLast xs = (last xs, map CDNum $ init xs)
 
-firstNonEmpty :: Map (Int, Int) (Set Result) -> Maybe (Set Result)
+firstNonEmpty :: Map (Natural, Natural) (Set Result) -> Maybe (Set Result)
 firstNonEmpty s =
   case M.minView s of
     Just (m, rest) -> if S.null m then firstNonEmpty rest else Just m
@@ -152,13 +153,13 @@ terms = terms'
 subdivide :: [CDNum] -> [([CDNum], [CDNum])]
 subdivide numbers' =
   let len = length numbers'
-      num = 2 ^ len :: Int
+      num = 2 ^ len :: Natural
       bitsplit [] result _ = bimap sort sort result
       bitsplit (x : xs) (r1, r2) n = let (q, m) = n `divMod` 2 in if even m then bitsplit xs (x : r1, r2) q else bitsplit xs (r1, x : r2) q
       divisions = map (bitsplit numbers' ([], [])) [1 .. num - 2]
    in divisions
 
-solve :: Int -> [CDNum] -> Maybe [Result]
+solve :: Natural -> [CDNum] -> Maybe [Result]
 solve target numbers =
   let ts = terms numbers
       d x y | x > y = x - y
@@ -166,7 +167,7 @@ solve target numbers =
       result (Result _ r _) = r
       results = filter ((<= 10) . d target . result) $ map toResult ts
       byScore = [((d target val, weight), r) | r@(Result _ val weight) <- results]
-      arr = A.accumArray (flip S.insert) S.empty ((0, 1), (10, 6)) byScore :: Array (Int, Int) (Set Result)
+      arr = A.accumArray (flip S.insert) S.empty ((0, 1), (10, 6)) byScore :: Array (Natural, Natural) (Set Result)
       mapped = M.fromList [((score, weight), arr ! (score, weight)) | score <- [0 .. 10], weight <- [1 .. 6]]
    in S.toList <$> firstNonEmpty mapped
 
