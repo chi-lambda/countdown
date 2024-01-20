@@ -101,7 +101,7 @@ evaluate Div left right = div (value left) (value right)
     div _ 1 = Nothing
     div x y =
       let (d, m) = x `divMod` y
-       in if m == 0 then Just d else Nothing
+       in if m == 0 && d /= y then Just d else Nothing
 
 toResult :: Term -> Result
 toResult t@(Single (CDNum i)) = Result t i 1
