@@ -87,7 +87,7 @@ evaluate Plus left right = add (value left) (value right)
     add _ _ = Nothing
 evaluate Minus left right = minus (value left) (value right)
   where
-    minus x y | x > y = Just $ x - y
+    minus x y | x > y && x - y /= y = Just $ x - y
     minus _ _ = Nothing
 evaluate Times left right = times (value left) (value right)
   where
