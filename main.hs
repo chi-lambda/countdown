@@ -24,19 +24,22 @@ newtype TermNum = TermNum Int deriving (Eq)
 instance Show TermNum where
   show (TermNum i) = show i
 
+-- negative numbers are bigger than positive numbers
+-- negative numbers are ordered by absolute value
+-- e.g. these numbers are in order: 0 1 3 -1 -2
 instance Ord TermNum where
   compare (TermNum x) (TermNum y) | x == 0 && y == 0 = EQ
   compare (TermNum x) (TermNum y) | x >= 0 && y >= 0 = compare x y
   compare (TermNum x) (TermNum y) | x < 0 && y < 0 = compare (-x) (-y)
   compare (TermNum x) (TermNum y) | x < 0 && y > 0 = GT
-  compare (TermNum x) (TermNum y) = LT
+  compare _ _ = LT
 
-withOp (Single (CDNum x)) | x >= 0 = " + " ++ show x
-withOp (Single (CDNum x)) = " - " ++ show x
+withOp (Single (TermNum x)) | x >= 0 = " + " ++ show x
+withOp (Single (TermNum x)) = " - " ++ show x
 withOp t@(Term _ _ v) | v >= 0 = " + " ++ show t
 withOp t@(Term {}) = " - " ++ show t
 
-data Term = Term Operation [Term] TermNum | Single CDNum deriving (Eq)
+data Term = Term Operation [Term] TermNum | Single TermNum deriving (Eq)
 
 instance Show Term where
   show (Term Plus terms v) = "(" ++ intercalate " + " (map show terms) ++ " = " ++ show v ++ ")"
@@ -94,7 +97,7 @@ instance Ord Result where
   compare (Result term result weight) (Result term' result' weight') = compare result result' <> compare weight weight' <> compare term term'
 
 value :: Term -> TermNum
-value (Single i) = fromIntegral i
+value (Single i) = i
 value (Term _ _ v) = v
 
 pairwise :: [a] -> [(a, a)]
@@ -106,16 +109,15 @@ evaluate Plus terms = add (map value terms) >>= \s -> if s > 0 then Just (fromIn
   where
     add xs | all (uncurry (<=)) (pairwise xs) = Just (sum xs)
     add _ = Nothing
-evaluate Times terms = foldrM times 1 (map value terms) >>= \p -> if p > 0 then Just (fromIntegral p) else Nothing
+evaluate Times terms = fromIntegral <$> foldrM times 1 (map value terms)
   where
     times 1 _ = Nothing
     times _ 1 = Nothing
     times _ (-1) = Nothing
     times x y | y < 0 = case divMod x (-y) of
-      (q,0) -> Just q
+      (q, 0) -> Just q
       _ -> Nothing
-    times x y | x >= y = Just $ x * y
-    times _ _ = Nothing
+    times x y = Just $ x * y
 
 -- evaluate Div [left, right] = div (value left) (value right)
 --   where
@@ -130,7 +132,7 @@ size (Single _) = 1
 size (Term _ terms _) = sum $ map size terms
 
 toResult :: Term -> Result
-toResult t@(Single (CDNum i)) = Result t (fromIntegral i) 1
+toResult t@(Single (TermNum i)) = Result t (fromIntegral i) 1
 toResult t@(Term _ _ v) = Result t (fromIntegral v) (size t)
 
 parse :: String -> (Natural, [CDNum])
@@ -158,19 +160,25 @@ insert x [] = [x]
 insert x (y : z : ys) | y < x && x <= z = y : x : z : ys
 insert x (y : ys) = y : insert x ys
 
+merge :: [Term] -> [Term] -> [Term]
+merge xs [] = xs
+merge [] ys = ys
+merge (x : xs) ys@(y : _) | x < y = x : merge xs ys
+merge xs (y : ys) = y : merge xs ys
+
 combineTerms :: Operation -> Term -> Term -> Term
-combineTerms Plus (Term Plus leftTerms v) (Term Plus rightTerms v') = Term Plus (sort $ leftTerms ++ rightTerms) (v + v')
+combineTerms Plus (Term Plus leftTerms v) (Term Plus rightTerms v') = Term Plus (merge leftTerms rightTerms) (v + v')
 combineTerms Plus (Term Plus leftTerms v) right = Term Plus (insert right leftTerms) (v + value right)
 combineTerms Plus left (Term Plus rightTerms v') = Term Plus (insert left rightTerms) (value left + v')
 combineTerms Plus left right = Term Plus [left, right] (value left + value right)
-combineTerms Times (Term Times leftTerms v) (Term Times rightTerms v') = Term Times (sort $ leftTerms ++ rightTerms) (v * v')
+combineTerms Times (Term Times leftTerms v) (Term Times rightTerms v') = Term Times (merge leftTerms rightTerms) (v * v')
 combineTerms Times (Term Times leftTerms v) right = Term Times (insert right leftTerms) (v + value right)
 combineTerms Times left (Term Times rightTerms v') = Term Times (insert left rightTerms) (value left + v')
 combineTerms Times left right = Term Times [left, right] (value left + value right)
 
 -- combineTerms Minus (Term2 Minus left right v) (Term2 Minus left' right' v') = Term Plus [(Term2 Minus left (Term Plus [right, left']))] (Term Plus [right, ])
 
-toSingle (CDNum i) = [Single (TermNum (fromIntegral i)), Single (TermNum (-fromIntegral i))]
+toSingle (CDNum i) = [Single (fromIntegral i), Single (-fromIntegral i)]
 
 generateTerms :: [CDNum] -> [Term]
 generateTerms = terms'
@@ -184,7 +192,7 @@ generateTerms = terms'
     terms' [i] = toSingle i
     terms' xs =
       concat [toSingle i | i <- xs]
-        ++ [ Term op leftTerm rightTerm v
+        ++ [ combineTerms op leftTerm rightTerm
              | op <- [Plus, Times],
                (left, right) <- subdivide xs,
                leftTerm <- terms'' left,
