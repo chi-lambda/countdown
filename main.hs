@@ -9,8 +9,8 @@ import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
 import Data.Set (Set)
 import Data.Set qualified as S
-import Prelude hiding (div)
 import Numeric.Natural (Natural)
+import Prelude hiding (div)
 
 data Operation = Plus | Minus | Times | Div deriving (Eq, Enum, Ord)
 
@@ -23,7 +23,16 @@ instance Show Operation where
 data Term = Term Operation Term Term Natural | Single CDNum deriving (Eq)
 
 instance Show Term where
-  show (Term op left right v) = "(" ++ show left ++ " " ++ show op ++ " " ++ show right ++ " = " ++ show v ++ ")"
+  show (Term op (Single i) (Single j) _) = show i ++ " " ++ show op ++ " " ++ show j
+  show (Term Plus (Single i) t@(Term Plus _ _ _) _) = show i ++ " + " ++ show t
+  show (Term Plus t@(Term Plus _ _ _) (Single i) _) = show t ++ " + " ++ show i
+  show (Term Plus left@(Term Plus _ _ _) right@(Term Plus _ _ _) _) = show left ++ " + " ++ show right
+  -- show (Term Times (Single i) t@(Term Times _ _ _) _) = show i ++ " * " ++ show t
+  -- show (Term Times t@(Term Times _ _ _) (Single i) _) = show t ++ " * " ++ show i
+  -- show (Term Times left@(Term Times _ _ _) right@(Term Times _ _ _) _) = show left ++ " * " ++ show right
+  show (Term op left@(Term _ _ _ v') right@(Term _ _ _ v'') _) = "(" ++ show left ++ " = " ++ show v' ++ ") " ++ show op ++ " (" ++ show right ++ " = " ++ show v'' ++ ")"
+  show (Term op left@(Term _ _ _ v) (Single v') _) = "(" ++ show left ++ " = " ++ show v ++ ") " ++ show op ++ " " ++ show v'
+  show (Term op (Single v) right@(Term _ _ _ v') _) = show v ++ " " ++ show op ++ " (" ++ show right ++ " = " ++ show v' ++ ")"
   show (Single i) = show i
 
 instance Ord Term where
