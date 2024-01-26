@@ -8,10 +8,12 @@ import Data.Ix (Ix)
 import Data.List (intercalate, sort)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
+import Data.Maybe (catMaybes)
 import Data.Set (Set)
 import Data.Set qualified as S
 import Numeric.Natural (Natural)
 import Prelude hiding (div)
+import Data.Functor ((<&>))
 
 data Operation = Plus | Times deriving (Eq, Enum, Ord)
 
@@ -19,7 +21,7 @@ instance Show Operation where
   show Plus = "+"
   show Times = "*"
 
-newtype TermNum = TermNum Int deriving (Eq)
+newtype TermNum = TermNum Int deriving (Eq, Num, Enum, Real, Integral)
 
 instance Show TermNum where
   show (TermNum i) = show i
@@ -88,7 +90,7 @@ instance Ix CDNum where
   index (m, _n) i = fromEnum i - fromEnum m
   inRange (l, u) m = l <= m && m <= u
 
-data Result = Result Term Int Natural deriving (Eq)
+data Result = Result Term Natural Natural deriving (Eq)
 
 instance Show Result where
   show (Result term result weight) = show result ++ " (" ++ show weight ++ ")" ++ " = " ++ show term
@@ -104,20 +106,21 @@ pairwise :: [a] -> [(a, a)]
 pairwise (x : y : xs) = (x, y) : pairwise (y : xs)
 pairwise _ = []
 
-evaluate :: Operation -> [Term] -> Maybe Natural
-evaluate Plus terms = add (map value terms) >>= \s -> if s > 0 then Just (fromIntegral s) else Nothing
-  where
-    add xs | all (uncurry (<=)) (pairwise xs) = Just (sum xs)
-    add _ = Nothing
-evaluate Times terms = fromIntegral <$> foldrM times 1 (map value terms)
-  where
-    times 1 _ = Nothing
-    times _ 1 = Nothing
-    times _ (-1) = Nothing
-    times x y | y < 0 = case divMod x (-y) of
-      (q, 0) -> Just q
-      _ -> Nothing
-    times x y = Just $ x * y
+-- evaluate :: Operation -> [Term] -> Maybe Natural
+-- evaluate Plus terms = add (map value terms) >>= \s -> if s > 0 then Just (fromIntegral s) else Nothing
+-- evaluate Times terms = fromIntegral <$> foldrM times 1 (map value terms)
+
+add x y | x + y > 0 = Just (x + y)
+add _ _ = Nothing
+
+times 1 _ = Nothing
+times _ 1 = Nothing
+times _ (-1) = Nothing
+times x _ | x <= 0 = Nothing
+times x y | y < 0 = case divMod x (-y) of
+  (q, 0) -> Just q
+  _ -> Nothing
+times x y = Just (x * y)
 
 -- evaluate Div [left, right] = div (value left) (value right)
 --   where
@@ -133,7 +136,7 @@ size (Term _ terms _) = sum $ map size terms
 
 toResult :: Term -> Result
 toResult t@(Single (TermNum i)) = Result t (fromIntegral i) 1
-toResult t@(Term _ _ v) = Result t (fromIntegral v) (size t)
+toResult t@(Term _ _ (TermNum v)) = Result t (fromIntegral v) (size t)
 
 parse :: String -> (Natural, [CDNum])
 parse = initLast . map read . words
@@ -166,19 +169,20 @@ merge [] ys = ys
 merge (x : xs) ys@(y : _) | x < y = x : merge xs ys
 merge xs (y : ys) = y : merge xs ys
 
-combineTerms :: Operation -> Term -> Term -> Term
-combineTerms Plus (Term Plus leftTerms v) (Term Plus rightTerms v') = Term Plus (merge leftTerms rightTerms) (v + v')
-combineTerms Plus (Term Plus leftTerms v) right = Term Plus (insert right leftTerms) (v + value right)
-combineTerms Plus left (Term Plus rightTerms v') = Term Plus (insert left rightTerms) (value left + v')
-combineTerms Plus left right = Term Plus [left, right] (value left + value right)
-combineTerms Times (Term Times leftTerms v) (Term Times rightTerms v') = Term Times (merge leftTerms rightTerms) (v * v')
-combineTerms Times (Term Times leftTerms v) right = Term Times (insert right leftTerms) (v + value right)
-combineTerms Times left (Term Times rightTerms v') = Term Times (insert left rightTerms) (value left + v')
-combineTerms Times left right = Term Times [left, right] (value left + value right)
+combineTerms :: Operation -> Term -> Term -> Maybe Term
+combineTerms Plus (Term Plus leftTerms v) (Term Plus rightTerms v') = add v v' <&> Term Plus (merge leftTerms rightTerms)
+combineTerms Plus (Term Plus leftTerms v) right = Just $ Term Plus (insert right leftTerms) (v + value right)
+combineTerms Plus left (Term Plus rightTerms v') = Just $ Term Plus (insert left rightTerms) (value left + v')
+combineTerms Plus left right = Just $ Term Plus [left, right] (value left + value right)
+combineTerms Times (Term Times leftTerms v) (Term Times rightTerms v') | v > 0 && v' > 0 = Just $ Term Times (merge leftTerms rightTerms) (v * v')
+combineTerms Times (Term Times leftTerms v) right | v > 0 = Just $ Term Times (insert right leftTerms) (v * value right)
+combineTerms Times left (Term Times rightTerms v') = Just $ Term Times (insert left rightTerms) (value left * v')
+combineTerms Times left right | value left > 0 && value right > 0 = Just $ Term Times [left, right] (value left * value right)
+combineTerms Times _ _ = Nothing
 
 -- combineTerms Minus (Term2 Minus left right v) (Term2 Minus left' right' v') = Term Plus [(Term2 Minus left (Term Plus [right, left']))] (Term Plus [right, ])
 
-toSingle (CDNum i) = [Single (fromIntegral i), Single (-fromIntegral i)]
+toSingles (CDNum i) = [Single (fromIntegral i), Single (-fromIntegral i)]
 
 generateTerms :: [CDNum] -> [Term]
 generateTerms = terms'
@@ -189,23 +193,16 @@ generateTerms = terms'
     memo = A.array bounds [((a, b, c, d, e), terms' (filter (/= CDNum 0) [a, b, c, d, e])) | a <- range, b <- range, c <- range, d <- range, e <- range]
     terms'' = (memo !) . toTuple
     terms' :: [CDNum] -> [Term]
-    terms' [i] = toSingle i
+    terms' [i] = toSingles i
     terms' xs =
-      concat [toSingle i | i <- xs]
-        ++ [ combineTerms op leftTerm rightTerm
-             | op <- [Plus, Times],
-               (left, right) <- subdivide xs,
-               leftTerm <- terms'' left,
-               rightTerm <- terms'' right,
-               Just v <- [evaluate op leftTerm rightTerm]
-           ]
-        ++ [ Term op leftTerm rightTerm v
-             | op <- [Plus .. Div],
-               (left, right) <- subdivide xs,
-               leftTerm <- terms'' left,
-               rightTerm <- terms'' right,
-               Just v <- [evaluate op leftTerm rightTerm]
-           ]
+      concat [toSingles i | i <- xs]
+        ++ catMaybes
+          [ combineTerms op leftTerm rightTerm
+            | op <- [Plus, Times],
+              (left, right) <- subdivide xs,
+              leftTerm <- terms'' left,
+              rightTerm <- terms'' right
+          ]
 
 subdivide :: [CDNum] -> [([CDNum], [CDNum])]
 subdivide numbers' =
