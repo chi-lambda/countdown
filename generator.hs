@@ -1,6 +1,9 @@
 module Main (main) where
 
-import System.Random (RandomGen, initStdGen, uniformR)
+import Data.Char (ord)
+import Data.Foldable (foldrM)
+import System.IO (IOMode (ReadMode), hGetChar, withFile, hSetEncoding, latin1)
+import Data.List (intercalate)
 
 smallNumbers :: [Int]
 smallNumbers = [1 .. 10] ++ [1 .. 10]
@@ -11,31 +14,34 @@ bigNumbers = [25, 50, 75, 100]
 data Countdown = Countdown Int [Int]
 
 instance Show Countdown where
-  show (Countdown target nums) = unwords (map show nums) ++ " " ++ show target
+  show (Countdown target nums) = intercalate " . " (take 3 $ map show nums) ++ "\n" ++ intercalate " . " (drop 3 $ map show nums) ++ "\n" ++ show target
 
 remove :: [Int] -> Int -> (Int, [Int])
 remove l n =
-  let ~(h, t : ts) = splitAt n l
+  let (h, t : ts) = splitAt n l
    in (t, h ++ ts)
 
 getNumbers :: IO Countdown
-getNumbers = do
-  rnd <- initStdGen
-  let (bigCount, rnd') = uniformR (1, 4) rnd
+getNumbers = withFile "/dev/random" ReadMode $ \h -> do
+  hSetEncoding h latin1
+  let next from to = do
+        i1 <- ord <$> hGetChar h
+        i2 <- ord <$> hGetChar h
+        let i = i1 * 256 + i2
+        return $ i `mod` (to - from) + from
+      foldF _ (r, rest) =
+        next 0 (length rest - 1) >>= \i ->
+          let (n, rest') = remove rest i
+           in return (n : r, rest')
+  bigCount <- next 1 4
   let smallCount = 6 - bigCount
-  let (rnd'', bigs, _) =
-        if bigCount == 4
-          then (rnd, bigNumbers, [])
-          else foldr foldF (rnd', [], bigNumbers) [1 .. bigCount]
-  let (rnd''', smalls, _) = foldr foldF (rnd'', [], smallNumbers) [1 .. smallCount]
-  let (target, _) = uniformR (100, 999) rnd'''
+  bigs <-
+    if bigCount == 4
+      then return bigNumbers
+      else fst <$> foldrM foldF ([], bigNumbers) [1 .. bigCount]
+  smalls <- fst <$> foldrM foldF ([], smallNumbers) [1 .. smallCount]
+  target <- next 100 999
   return $ Countdown target (bigs ++ smalls)
-  where
-    foldF :: (RandomGen g) => Int -> (g, [Int], [Int]) -> (g, [Int], [Int])
-    foldF _ (rnd, r, rest) =
-      let (i, rnd') = uniformR (0, length rest - 1) rnd
-          (n, rest') = remove rest i
-       in (rnd', n : r, rest')
 
 main :: IO ()
 main = getNumbers >>= print
