@@ -28,12 +28,12 @@ getNumbers = withFile "/dev/random" ReadMode $ \h -> do
         i1 <- ord <$> hGetChar h
         i2 <- ord <$> hGetChar h
         let i = i1 * 256 + i2
-        return $ i `mod` (to - from) + from
+        return $ i `mod` (to - from + 1) + from
       foldF _ (r, rest) =
         next 0 (length rest - 1) >>= \i ->
           let (n, rest') = remove rest i
            in return (n : r, rest')
-  bigCount <- next 1 4
+  bigCount <- next 0 4
   let smallCount = 6 - bigCount
   bigs <-
     if bigCount == 4
