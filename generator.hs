@@ -22,9 +22,9 @@ remove l n =
 
 getNumbers :: IO Countdown
 getNumbers = do
-  h <- openFile "/dev/random" ReadMode
-  hSetEncoding h latin1
   let next from to = do
+        h <- openFile "/dev/random" ReadMode
+        hSetEncoding h latin1
         i1 <- ord <$> hGetChar h
         i2 <- ord <$> hGetChar h
         let i = i1 * 256 + i2
