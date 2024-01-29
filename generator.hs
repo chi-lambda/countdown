@@ -2,8 +2,7 @@ module Main (main) where
 
 import Data.Char (ord)
 import Data.Foldable (foldrM)
-import System.IO (IOMode (ReadMode), hGetChar, withFile, hSetEncoding, latin1)
-import Data.List (intercalate)
+import System.IO (IOMode (ReadMode), hGetChar, hSetEncoding, latin1, openFile)
 
 smallNumbers :: [Int]
 smallNumbers = [1 .. 10] ++ [1 .. 10]
@@ -14,7 +13,7 @@ bigNumbers = [25, 50, 75, 100]
 data Countdown = Countdown Int [Int]
 
 instance Show Countdown where
-  show (Countdown target nums) = intercalate " . " (take 3 $ map show nums) ++ "\n" ++ intercalate " . " (drop 3 $ map show nums) ++ "\n" ++ show target
+  show (Countdown target nums) = unwords (map show nums) ++ "\n" ++ show target
 
 remove :: [Int] -> Int -> (Int, [Int])
 remove l n =
@@ -22,7 +21,8 @@ remove l n =
    in (t, h ++ ts)
 
 getNumbers :: IO Countdown
-getNumbers = withFile "/dev/random" ReadMode $ \h -> do
+getNumbers = do
+  h <- openFile "/dev/random" ReadMode
   hSetEncoding h latin1
   let next from to = do
         i1 <- ord <$> hGetChar h
