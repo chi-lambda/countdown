@@ -1,4 +1,6 @@
-module Main (main) where
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
+module Countdown (main) where
 
 import Data.Array.IArray (Array, (!))
 import Data.Array.IArray qualified as A
@@ -9,8 +11,8 @@ import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
 import Data.Set (Set)
 import Data.Set qualified as S
-import Prelude hiding (div)
 import Numeric.Natural (Natural)
+import Prelude hiding (div)
 
 data Operation = Plus | Minus | Times | Div deriving (Eq, Enum, Ord)
 

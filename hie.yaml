@@ -1,3 +1,13 @@
 cradle:
-  direct:
-    arguments: ["-Wall"]
+  stack:
+    - path: "./src"
+      component: "countdown:lib"
+
+    - path: "./app/countdown.hs"
+      component: "countdown:exe:countdown"
+
+    - path: "./app/generator.hs"
+      component: "countdown:exe:generator"
+
+    - path: "./test"
+      component: "countdown:test:countdown-test"
