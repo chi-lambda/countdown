@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Countdown</title>
+  <script src="vue.js"></script>
+  <style type="text/css">
+    body {
+      background-image: url(countdown.jpg);
+      background-position: 0 0;
+      background-repeat: no-repeat;
+    }
+
+    .number {
+      background-color: #224A87;
+      color: white;
+      font-family: Arial;
+      font-size: 80px;
+      font-weight: bold;
+      text-align: center;
+      width: 112px;
+      height: 100px;
+      margin-right: 11px;
+      vertical-align: middle;
+      align-items: center;
+      justify-content: center;
+      line-height: 100px;
+      display: inline-block;
+    }
+
+    .number-inner {
+      display: inline-block;
+      transform: translateY(0px);
+    }
+
+    #targetnumber {
+      background-color: #0101C5;
+      color: white;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-weight: bold;
+      font-size: 120px;
+      text-align: center;
+      width: 270px;
+      height: 120px;
+      vertical-align: middle;
+      align-items: center;
+      justify-content: center;
+      line-height: 120px;
+      display: inline-block;
+      position: absolute;
+      top: 88px;
+      left: 826px;
+    }
+
+    #targetnumber>span {
+      display: inline-block;
+      transform: translateY(-8px);
+    }
+
+    #numbers {
+      position: absolute;
+      left: 600px;
+      top: 240px;
+    }
+
+    .compress {
+      transform: scaleX(0.8) translateY(0px) translateX(-19px);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+    <div id="targetnumber"><span @click="reset">{{ target }}</span></div>
+    <div id="numbers">
+      <div class="number" v-for="number in numbers"><span class="number-inner" :class="{compress: number == 100}">{{
+          number }}</span></div>
+    </div>
+  </div>
+  <script>
+    function randomInt(n) {
+      return Math.floor(Math.random() * n);
+    }
+    function select(n, list) {
+      let result = [];
+      for (let i = 0; i < n; i++) {
+        let r = randomInt(list.length);
+        result = result.concat(list.splice(r, 1));
+      }
+      return result;
+    }
+    const app = new Vue({
+      el: '#app',
+      data: {
+        target: 100,
+        numbers: [1, 2, 3, 4, 5, 6],
+      },
+      methods: {
+        reset() {
+          this.target = randomInt(900) + 100;
+          let smallNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+          let bigNumbers = [25, 50, 75, 100];
+          let bigCount = randomInt(5);
+          let smallCount = 6 - bigCount;
+          let bigs = bigCount == 4 ? bigNumbers : select(bigCount, bigNumbers);
+          let smalls = select(smallCount, smallNumbers);
+          this.numbers = bigs.concat(smalls);
+        }
+      },
+      created() {
+        this.reset();
+      }
+    });
+
+
+  </script>
+</body>
+
+</html>
