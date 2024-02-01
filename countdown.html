@@ -6,7 +6,7 @@
   <script src="vue.js"></script>
   <style type="text/css">
     body {
-      background-image: url(countdown.jpg);
+      background-image: url(countdown1.jpg);
       background-position: 0 0;
       background-repeat: no-repeat;
     }
@@ -105,6 +105,7 @@
           let bigs = bigCount == 4 ? bigNumbers : select(bigCount, bigNumbers);
           let smalls = select(smallCount, smallNumbers);
           this.numbers = bigs.concat(smalls);
+          document.getElementsByTagName('body')[0].style.backgroundImage = 'url(countdown' + randomInt(3) + '.jpg)';
         }
       },
       created() {
