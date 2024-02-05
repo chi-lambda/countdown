@@ -6,7 +6,6 @@ module Countdown (main) where
 import Control.Monad ((<=<), (>=>))
 import Data.Array.IArray (Array, (!))
 import Data.Array.IArray qualified as A
-import Data.Bifunctor (bimap)
 import Data.Ix (Ix)
 import Data.List (sort, (\\))
 import Data.Map.Strict (Map)
@@ -133,7 +132,7 @@ parse = (mapM eitherRead . words) >=> initLast
   where
     initLast xs =
       let target = maximum xs
-          numbers = mapM eitherCDNum (xs \\ [target])
+          numbers = sort <$> mapM eitherCDNum (xs \\ [target])
        in fmap (target,) numbers
 
 firstNonEmpty :: Map (Natural, Natural) (Set Result) -> Either String (Set Result)
@@ -175,7 +174,7 @@ subdivide :: [CDNum] -> [([CDNum], [CDNum])]
 subdivide numbers' =
   let len = length numbers'
       num = 2 ^ len :: Natural
-      bitsplit [] result _ = bimap sort sort result
+      bitsplit [] result _ = result
       bitsplit (x : xs) (r1, r2) n = let (q, m) = n `divMod` 2 in if even m then bitsplit xs (x : r1, r2) q else bitsplit xs (r1, x : r2) q
       divisions = map (bitsplit numbers' ([], [])) [1 .. num - 2]
    in divisions
