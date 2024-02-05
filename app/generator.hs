@@ -16,9 +16,9 @@ instance Show Countdown where
   show (Countdown target nums) = unwords (map show nums) ++ "\n" ++ show target
 
 remove :: [Int] -> Int -> (Int, [Int])
-remove l n =
-  let (h, t : ts) = splitAt n l
-   in (t, h ++ ts)
+remove l n = case splitAt n l of
+   (h, t : ts) -> (t, h ++ ts)
+   _ -> error "remove: invalid split"
 
 getNumbers :: IO Countdown
 getNumbers = do
