@@ -1,12 +1,15 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TupleSections #-}
 
 module Countdown (main) where
 
+import Control.Monad ((>=>))
 import Data.Array.IArray (Array, (!))
 import Data.Array.IArray qualified as A
 import Data.Bifunctor (bimap)
+import Data.Either (rights)
 import Data.Ix (Ix)
-import Data.List (sort)
+import Data.List (sort, (\\))
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
 import Data.Set (Set)
@@ -78,6 +81,17 @@ instance Show Result where
 instance Ord Result where
   compare (Result term result weight) (Result term' result' weight') = compare result result' <> compare weight weight' <> compare term term'
 
+eitherRead :: (Read a) => String -> Either String a
+eitherRead s = case reads s of
+  [] -> Left $ "could not parse '" ++ s ++ "'"
+  ((x, _) : _) -> Right x
+
+countdownNumbers :: [Natural]
+countdownNumbers = [1 .. 10] ++ [25, 75, 50, 100]
+
+eitherCDNum :: Natural -> Either String CDNum
+eitherCDNum i = if i `elem` countdownNumbers then Right (CDNum i) else Left (show i ++ " is not a valid Countdown number")
+
 value :: Term -> Natural
 value (Single (CDNum i)) = i
 value (Term _ _ _ v) = v
@@ -112,10 +126,13 @@ toResult t@(Term _ _ _ v) = Result t v (size t)
     size (Single _) = 1
     size (Term _ left right _) = size left + size right
 
-parse :: String -> (Natural, [CDNum])
-parse = initLast . map read . words
+parse :: String -> Either String (Natural, [CDNum])
+parse = (mapM eitherRead . words) >=> initLast
   where
-    initLast xs = (last xs, map CDNum $ init xs)
+    initLast xs =
+      let target = maximum xs
+          numbers = mapM eitherCDNum (xs \\ [target])
+       in fmap (target,) numbers
 
 firstNonEmpty :: Map (Natural, Natural) (Set Result) -> Maybe (Set Result)
 firstNonEmpty s =
@@ -178,4 +195,4 @@ showMaybeList Nothing = "No solution"
 showMaybeList (Just xs) = unlines $ map show xs
 
 main :: IO ()
-main = interact $ unlines . map (showMaybeList . uncurry solve . parse) . lines
+main = interact $ unlines . map (either id (showMaybeList . uncurry solve) . parse) . lines
