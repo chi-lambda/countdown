@@ -3,11 +3,10 @@
 
 module Countdown (main) where
 
-import Control.Monad ((>=>))
+import Control.Monad ((<=<), (>=>))
 import Data.Array.IArray (Array, (!))
 import Data.Array.IArray qualified as A
 import Data.Bifunctor (bimap)
-import Data.Either (rights)
 import Data.Ix (Ix)
 import Data.List (sort, (\\))
 import Data.Map.Strict (Map)
@@ -86,6 +85,9 @@ eitherRead s = case reads s of
   [] -> Left $ "could not parse '" ++ s ++ "'"
   ((x, _) : _) -> Right x
 
+coalesce :: Either a a -> a
+coalesce = either id id
+
 countdownNumbers :: [Natural]
 countdownNumbers = [1 .. 10] ++ [25, 75, 50, 100]
 
@@ -134,11 +136,11 @@ parse = (mapM eitherRead . words) >=> initLast
           numbers = mapM eitherCDNum (xs \\ [target])
        in fmap (target,) numbers
 
-firstNonEmpty :: Map (Natural, Natural) (Set Result) -> Maybe (Set Result)
+firstNonEmpty :: Map (Natural, Natural) (Set Result) -> Either String (Set Result)
 firstNonEmpty s =
   case M.minView s of
-    Just (m, rest) -> if S.null m then firstNonEmpty rest else Just m
-    Nothing -> Nothing
+    Just (m, rest) -> if S.null m then firstNonEmpty rest else Right m
+    Nothing -> Left "No solution"
 
 {-# INLINE toTuple #-}
 toTuple :: (Num a) => [a] -> (a, a, a, a, a)
@@ -178,7 +180,7 @@ subdivide numbers' =
       divisions = map (bitsplit numbers' ([], [])) [1 .. num - 2]
    in divisions
 
-solve :: Natural -> [CDNum] -> Maybe [Result]
+solve :: Natural -> [CDNum] -> Either String [Result]
 solve target numbers =
   let ts = terms numbers
       d x y | x > y = x - y
@@ -190,9 +192,5 @@ solve target numbers =
       mapped = M.fromList [((score, weight), arr ! (score, weight)) | score <- [0 .. 10], weight <- [1 .. 6]]
    in S.toList <$> firstNonEmpty mapped
 
-showMaybeList :: Maybe [Result] -> String
-showMaybeList Nothing = "No solution"
-showMaybeList (Just xs) = unlines $ map show xs
-
 main :: IO ()
-main = interact $ unlines . map (either id (showMaybeList . uncurry solve) . parse) . lines
+main = interact $ unlines . map (coalesce . ((fmap (unlines . map show) . uncurry solve) <=< parse)) . lines
