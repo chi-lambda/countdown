@@ -6,7 +6,7 @@ import System.IO (Handle, IOMode (ReadMode), hGetChar, hSetEncoding, latin1, ope
 
 next :: Int -> Int -> IO Int
 next from to = do
-  (i1, i2) <- openFile "/dev/random" ReadMode |> (`hSetEncoding` latin1) >>= hGetChar2 <&> both ord
+  (i1, i2) <- openFile "/dev/random" ReadMode |> flip hSetEncoding latin1 >>= hGetChar2 <&> both ord
   let i = i1 * 256 + i2
   return $ i `mod` (to - from + 1) + from
 
