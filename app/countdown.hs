@@ -6,8 +6,10 @@ module Countdown (main) where
 import Control.Monad ((<=<), (>=>))
 import Data.Array.IArray (Array, (!))
 import Data.Array.IArray qualified as A
+import Data.Bifunctor (bimap)
+import Data.Bits (testBit)
 import Data.Ix (Ix)
-import Data.List (sort, (\\))
+import Data.List (partition, sort, (\\))
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as M
 import Data.Set (Set)
@@ -171,12 +173,11 @@ terms = terms'
            ]
 
 subdivide :: [CDNum] -> [([CDNum], [CDNum])]
-subdivide numbers' =
-  let len = length numbers'
+subdivide numbers =
+  let len = length numbers
       num = 2 ^ len :: Natural
-      bitsplit [] result _ = result
-      bitsplit (x : xs) (r1, r2) n = let (q, m) = n `divMod` 2 in if even m then bitsplit xs (x : r1, r2) q else bitsplit xs (r1, x : r2) q
-      divisions = map (bitsplit numbers' ([], [])) [1 .. num - 2]
+      bitsplit xs n = bimap (map fst) (map fst) $ partition (testBit n . snd) (zip xs [0 ..])
+      divisions = map (bitsplit numbers) [1 .. num - 2]
    in divisions
 
 solve :: Natural -> [CDNum] -> Either String [Result]
