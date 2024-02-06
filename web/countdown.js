@@ -1,8 +1,6 @@
 function solve(target, numbers) {
     let terms = Array.from(findTerms(numbers, {}));
-    console.log(terms.length);
     let relevantTerms = terms.filter(e => Math.abs(e.v - target) <= 10);
-    console.log(relevantTerms.length);
     let groupedTerms = Object.groupBy(relevantTerms, e => Math.abs(e.v - target));
     return groupedTerms;
 }
@@ -94,5 +92,5 @@ function show(term) {
     if (term.type === 'single') {
         return term.v.toString();
     }
-    return '(' + show(term.left) + term.op + show(term.right) + ')';
+    return '(' + show(term.left) + ' ' + term.op + ' ' + show(term.right) + ' = ' + evaluate(term.op, term.left,term.right) + ')';
 }
