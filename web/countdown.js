@@ -1,5 +1,5 @@
 function solve(target, numbers) {
-    let terms = Array.from(findTerms(numbers, {}));
+    let terms = findTerms(numbers.toReversed(), {});
     let relevantTerms = terms.filter(e => Math.abs(e.v - target) <= 10);
     let groupedTerms = Object.groupBy(relevantTerms, e => Math.abs(e.v - target));
     return groupedTerms;
