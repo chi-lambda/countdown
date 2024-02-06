@@ -46,26 +46,16 @@ function toSingle(i) {
     return ({ type: 'single', v: i });
 }
 
-function areEqual(term1, term2) {
-    // TODO: this is fast, but doesn't find all solutions
-    if (term1.v == term2.v) {
-        if (term1.type === 'single' && term2.type === 'single') {
-            return true;
-        }
-        if (term1.type === 'term' && term2.type === 'term') {
-            return term1.op === term2.op; //&& areEqual(term1.left, term2.left) && areEqual(term1.right, term2.right);
-        }
-    }
-    return false;
-}
-
 function findTerms(numbers, memo) {
     if (memo[numbers]) {
         return memo[numbers];
     }
     let ops = ['+', '-', '*', '/'];
     let subdivisions = subdivide(numbers);
-    let result = numbers.map(e => toSingle(e));
+    let result = {}
+    for (let n of numbers) {
+        result[n] = toSingle(n);
+    }
     for (let op of ops) {
         for (let subdivision of subdivisions) {
             let [left, right] = subdivision;
@@ -76,21 +66,22 @@ function findTerms(numbers, memo) {
                     let v = evaluate(op, leftTerm, rightTerm);
                     if (v) {
                         let t = ({ type: 'term', op: op, left: leftTerm, right: rightTerm, v: v });
-                        if (!result.some(e => areEqual(e, t))) {
-                            result.push(t);
+                        if (!result[v]) {
+                            result[v] = t;
                         }
                     }
                 }
             }
         }
     }
-    memo[numbers] = result;
-    return result;
+    let resultArray = Object.values(result);
+    memo[numbers] = resultArray;
+    return resultArray;
 }
 
 function show(term) {
     if (term.type === 'single') {
         return term.v.toString();
     }
-    return '(' + show(term.left) + ' ' + term.op + ' ' + show(term.right) + ' = ' + evaluate(term.op, term.left,term.right) + ')';
+    return '(' + show(term.left) + ' ' + term.op + ' ' + show(term.right) + ' = ' + evaluate(term.op, term.left, term.right) + ')';
 }
