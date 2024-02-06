@@ -67,6 +67,16 @@
     .compress {
       transform: scaleX(0.8) translateY(0px) translateX(-19px);
     }
+
+    #solution {
+      position: absolute;
+      left: 360px;
+      top: 410px;
+      height: 470px;
+      width: 850px;
+      font-family: "Segoe Script", "Comic Sans MS";
+      font-size: 36px;
+    }
   </style>
 </head>
 
@@ -77,6 +87,7 @@
       <div class="number" v-for="number in numbers"><span class="number-inner" :class="{compress: number == 100}">{{
           number }}</span></div>
     </div>
+    <div id="solution" @click="solve">{{ solution }}</div>
   </div>
   <script>
     function randomInt(n) {
@@ -95,6 +106,7 @@
       data: {
         target: 100,
         numbers: [1, 2, 3, 4, 5, 6],
+        solution: ''
       },
       methods: {
         reset() {
@@ -107,6 +119,18 @@
           let smalls = select(smallCount, smallNumbers);
           this.numbers = bigs.concat(smalls);
           document.getElementsByTagName('body')[0].style.backgroundImage = 'url(countdown' + bigCount + '.jpg)';
+          this.solution = '';
+        },
+        solve() {
+          let solutions = solve(this.target, this.numbers);
+          for (let i = 0; i <= 10; i++) {
+            console.log(solutions[i]);
+            if (solutions[i]) {
+              this.solution = show(solutions[i][0]);
+              return;
+            }
+          }
+          this.solution = 'No solution';
         }
       },
       created() {
