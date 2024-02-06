@@ -122,16 +122,19 @@
           let smalls = select(smallCount, smallNumbers);
           this.numbers = bigs.concat(smalls);
           document.getElementsByTagName('body')[0].style.backgroundImage = 'url(countdown' + bigCount + '.jpg)';
-          let solutions = solve(this.target, this.numbers);
-          for (let i = 0; i <= 10; i++) {
-            if (solutions[i]) {
-              this.solution = solutions[i][0];
-              this.solutionText = this.solution.v;
-              return;
+          this.solutionText = '';
+          setTimeout(() => {
+            let solutions = solve(this.target, this.numbers);
+            for (let i = 0; i <= 10; i++) {
+              if (solutions[i]) {
+                this.solution = solutions[i][0];
+                this.solutionText = this.solution.v;
+                return;
+              }
             }
-          }
-          this.solution = null;
-          this.solutionText = 'No solution';
+            this.solution = null;
+            this.solutionText = 'No solution';
+          }, 500);
         },
         solve() {
           this.solutionText = show(this.solution);
