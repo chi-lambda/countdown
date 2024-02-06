@@ -87,7 +87,7 @@
       <div class="number" v-for="number in numbers"><span class="number-inner" :class="{compress: number == 100}">{{
           number }}</span></div>
     </div>
-    <div id="solution" @click="solve">{{ solution }}</div>
+    <div id="solution" @click="solve">{{ solutionText }}</div>
   </div>
   <script>
     function randomInt(n) {
@@ -106,7 +106,8 @@
       data: {
         target: 100,
         numbers: [1, 2, 3, 4, 5, 6],
-        solution: ''
+        solution: null,
+        solutionText: ''
       },
       methods: {
         reset() {
@@ -119,18 +120,19 @@
           let smalls = select(smallCount, smallNumbers);
           this.numbers = bigs.concat(smalls);
           document.getElementsByTagName('body')[0].style.backgroundImage = 'url(countdown' + bigCount + '.jpg)';
-          this.solution = '';
-        },
-        solve() {
           let solutions = solve(this.target, this.numbers);
           for (let i = 0; i <= 10; i++) {
-            console.log(solutions[i]);
             if (solutions[i]) {
-              this.solution = show(solutions[i][0]);
+              this.solution = solutions[i][0];
+              this.solutionText = this.solution.v;
               return;
             }
           }
-          this.solution = 'No solution';
+          this.solution = null;
+          this.solutionText = 'No solution';
+        },
+        solve() {
+          this.solutionText = show(this.solution);
         }
       },
       created() {
@@ -138,6 +140,7 @@
       }
     });
 
+    this.vue = app;
 
   </script>
 </body>
