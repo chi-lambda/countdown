@@ -165,11 +165,11 @@
               setTimeout(timerF, interval, i + 1);
             } else {
               this.runSolver();
+              let music = document.getElementById('music');
+              music.play();
             }
           }
           setTimeout(timerF, 1000, 0);
-          let music = document.getElementById('music');
-          music.play();
         },
         runSolver() {
           let solutions = solve(this.target, this.numbers);
