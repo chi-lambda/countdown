@@ -148,7 +148,6 @@
           const interval = 50;
           const count = 20;
           let timerF = (i) => {
-            console.log(i);
             if (i < count) {
               this.target = randomInt(900) + 100;
               setTimeout(timerF, interval, i + 1);
