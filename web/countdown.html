@@ -89,7 +89,7 @@
       <div class="number" v-for="number in numbers"><span class="number-inner" :class="{compress: number == 100}">{{
           number }}</span></div>
     </div>
-    <div id="solution" @click="solve">{{ solutionText }}</div>
+    <div id="solution" @click="showSolution">{{ solutionText }}</div>
   </div>
   <script>
     function randomInt(n) {
@@ -123,20 +123,22 @@
           this.numbers = bigs.concat(smalls);
           document.getElementsByTagName('body')[0].style.backgroundImage = 'url(countdown' + bigCount + '.jpg)';
           this.solutionText = '';
-          setTimeout(() => {
-            let solutions = solve(this.target, this.numbers);
-            for (let i = 0; i <= 10; i++) {
-              if (solutions[i]) {
-                this.solution = solutions[i][0];
-                this.solutionText = this.solution.v;
-                return;
-              }
-            }
-            this.solution = null;
-            this.solutionText = 'No solution';
-          }, 500);
+          this.runSolver();
         },
-        solve() {
+        runSolver() {
+          let solutions = solve(this.target, this.numbers);
+          for (let i = 0; i <= 10; i++) {
+            if (solutions[i]) {
+              console.log(solutions[i].map(e => show(e)));
+              this.solution = solutions[i].toSorted((a, b) => size(b) - size(a))[0];
+              this.solutionText = this.solution.v;
+              return;
+            }
+          }
+          this.solution = null;
+          this.solutionText = 'No solution';
+        },
+        showSolution() {
           this.solutionText = show(this.solution);
         }
       },
