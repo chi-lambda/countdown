@@ -130,7 +130,7 @@
           for (let i = 0; i <= 10; i++) {
             if (solutions[i]) {
               console.log(solutions[i].map(e => show(e)));
-              this.solution = solutions[i].toSorted((a, b) => size(b) - size(a))[0];
+              this.solution = solutions[i].toSorted((a, b) => size(a) - size(b))[0];
               this.solutionText = this.solution.v;
               return;
             }
