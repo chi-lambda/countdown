@@ -106,38 +106,57 @@
     const app = new Vue({
       el: '#app',
       data: {
-        target: 100,
-        numbers: [1, 2, 3, 4, 5, 6],
+        target: '000',
+        numbers: [' ', ' ', ' ', ' ', ' ', ' '],
         solution: null,
         solutionText: ''
       },
       methods: {
         reset() {
+          this.target = '000';
+          this.numbers = [' ', ' ', ' ', ' ', ' ', ' ']
+          this.solutionText = '';
+          this.showNumbers(this.generateNumbers());
+        },
+        generateNumbers() {
           let smallNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
           let bigNumbers = [25, 50, 75, 100];
           let bigCount = randomInt(5);
           let smallCount = 6 - bigCount;
           let bigs = bigCount == 4 ? bigNumbers : select(bigCount, bigNumbers);
           let smalls = select(smallCount, smallNumbers);
-          this.numbers = bigs.concat(smalls);
           document.getElementsByTagName('body')[0].style.backgroundImage = 'url(countdown' + bigCount + '.jpg)';
-          this.solutionText = '';
-          this.setTarget();
+          return bigs.concat(smalls);
+        },
+        showNumbers(numbers) {
+          let interval = 1000;
+          let timerF = (i) => {
+            let ns = [' ', ' ', ' ', ' ', ' ', ' '];
+            for (let j = i; j < 6; j++) {
+              ns[j] = numbers[j];
+            }
+            this.numbers = ns;
+            if (i > 0) {
+              setTimeout(timerF, interval, i - 1);
+            } else {
+              vue.setTarget();
+            }
+          }
+          setTimeout(timerF, 300, 5);
         },
         setTarget() {
-          const vue = this;
           const interval = 50;
           const count = 20;
           let timerF = (i) => {
             console.log(i);
             if (i < count) {
-              vue.target = randomInt(900) + 100;
+              this.target = randomInt(900) + 100;
               setTimeout(timerF, interval, i + 1);
             } else {
-              vue.runSolver();
+              this.runSolver();
             }
           }
-          setTimeout(timerF, interval, 0);
+          setTimeout(timerF, 1000, 0);
         },
         runSolver() {
           let solutions = solve(this.target, this.numbers);
