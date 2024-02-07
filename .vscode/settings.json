@@ -3,7 +3,9 @@
         "**/*.exe": true,
         "**/*.hi": true,
         "**/*.o": true,
-        "**/.vscode/": true
+        "**/.vscode/": true,
+        "dist-newstyle/": true,
+        ".stack-work": true
     },
     "files.eol": "\n"
 }
