@@ -79,6 +79,14 @@
       padding-top: 30px;
       padding-left: 21px;
     }
+
+    #rachel {
+      position: absolute;
+      left: 0px;
+      top: 260px;
+      height: 820px;
+      width: 335px;
+    }
   </style>
 </head>
 
@@ -90,6 +98,10 @@
           number }}</span></div>
     </div>
     <div id="solution" @click="showSolution">{{ solutionText }}</div>
+    <div id="rachel" @click="reset"></div>
+    <audio id="music" playsinline>
+      <source src="countdown.webm" type="audio/webm">
+    </audio>
   </div>
   <script>
     function randomInt(n) {
@@ -156,6 +168,8 @@
             }
           }
           setTimeout(timerF, 1000, 0);
+          let music = document.getElementById('music');
+          music.play();
         },
         runSolver() {
           let solutions = solve(this.target, this.numbers);
