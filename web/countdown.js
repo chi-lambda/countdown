@@ -85,3 +85,10 @@ function show(term) {
     }
     return '(' + show(term.left) + ' ' + term.op + ' ' + show(term.right) + ' = ' + evaluate(term.op, term.left, term.right) + ')';
 }
+
+function size(term) {
+    if (term.type === 'single') {
+        return 1;
+    }
+    return size(term.left) + size(term.right);
+}
