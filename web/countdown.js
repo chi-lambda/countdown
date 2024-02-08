@@ -83,5 +83,7 @@ function show(term) {
     if (term.type === 'single') {
         return term.v.toString();
     }
-    return '(' + show(term.left) + ' ' + term.op + ' ' + show(term.right) + ' = ' + evaluate(term.op, term.left, term.right) + ')';
+    let left = term.left.type === 'single' ? show(term.left) : '(' + show(term.left) + ')';
+    let right = term.right.type === 'single' ? show(term.right) : '(' + show(term.right) + ')';
+    return left + ' ' + term.op + ' ' + right + ' = ' + evaluate(term.op, term.left, term.right);
 }
