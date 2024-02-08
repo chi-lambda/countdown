@@ -85,9 +85,9 @@
               this.target = randomInt(900) + 100;
               setTimeout(timerF, interval, i + 1);
             } else {
-              this.runSolver();
               let music = document.getElementById('music');
               music.play();
+              this.runSolver();
             }
           }
           setTimeout(timerF, 1000, 0);
