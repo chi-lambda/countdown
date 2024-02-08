@@ -1,3 +1,8 @@
+body {
+    background-image: url(countdown.jpg);
+    background-position: -180px 0px;
+}
+
 .background {
     position: absolute;
     left: -180px;
