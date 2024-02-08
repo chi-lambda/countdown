@@ -43,7 +43,7 @@ function evaluate(op, left, right) {
 }
 
 function toSingle(i) {
-    return ({ type: 'single', v: i });
+    return ({ type: 'single', v: i, size: 1 });
 }
 
 function findTerms(numbers, memo) {
@@ -65,8 +65,8 @@ function findTerms(numbers, memo) {
                 for (let rightTerm of rightTerms) {
                     let v = evaluate(op, leftTerm, rightTerm);
                     if (v) {
-                        let t = ({ type: 'term', op: op, left: leftTerm, right: rightTerm, v: v });
-                        if (!result[v]) {
+                        let t = ({ type: 'term', op: op, left: leftTerm, right: rightTerm, v: v, size: leftTerm.size + rightTerm.size });
+                        if (!result[v] || result[v].size > t.size) {
                             result[v] = t;
                         }
                     }
@@ -84,11 +84,4 @@ function show(term) {
         return term.v.toString();
     }
     return '(' + show(term.left) + ' ' + term.op + ' ' + show(term.right) + ' = ' + evaluate(term.op, term.left, term.right) + ')';
-}
-
-function size(term) {
-    if (term.type === 'single') {
-        return 1;
-    }
-    return size(term.left) + size(term.right);
 }
