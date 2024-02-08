@@ -79,9 +79,21 @@ function findTerms(numbers, memo) {
     return resultArray;
 }
 
+function findSummands(term) {
+    if (term.type === 'single' || term.op !== '+') {
+        return [term];
+    }
+    return findSummands(term.left).concat(findSummands(term.right));
+}
+
 function show(term) {
     if (term.type === 'single') {
         return term.v.toString();
+    }
+    if (term.op === '+') {
+        let summands = findSummands(term);
+        let sum = summands.map(t => t.v).reduce((a, b) => a + b);
+        return summands.map(t => t.type === 'single' ? show(t) : '(' + show(t) + ')').join(' + ') + ' = ' + sum;
     }
     let left = term.left.type === 'single' ? show(term.left) : '(' + show(term.left) + ')';
     let right = term.right.type === 'single' ? show(term.right) : '(' + show(term.right) + ')';
