@@ -6,10 +6,20 @@
   <script src="vue.js"></script>
   <script src="countdown.js"></script>
   <link rel="stylesheet" href="countdown.css">
+  <link rel="preload" as="image" href="countdown0.jpg">
+  <link rel="preload" as="image" href="countdown1.jpg">
+  <link rel="preload" as="image" href="countdown2.jpg">
+  <link rel="preload" as="image" href="countdown3.jpg">
+  <link rel="preload" as="image" href="countdown4.jpg">
 </head>
 
 <body>
   <div id="app">
+    <div class="background0 background" :class="{bgVisible: bigCount == 0}"></div>
+    <div class="background1 background" :class="{bgVisible: bigCount == 1}"></div>
+    <div class="background2 background" :class="{bgVisible: bigCount == 2}"></div>
+    <div class="background3 background" :class="{bgVisible: bigCount == 3}"></div>
+    <div class="background4 background" :class="{bgVisible: bigCount == 4}"></div>
     <div id="targetnumber"><span @click="reset">{{ target }}</span></div>
     <div id="numbers">
       <div class="number" v-for="number in numbers"><span class="number-inner" :class="{compress: number == 100}">{{
@@ -36,6 +46,7 @@
     const app = new Vue({
       el: '#app',
       data: {
+        bigCount: 0,
         target: '000',
         numbers: [' ', ' ', ' ', ' ', ' ', ' '],
         solution: null,
@@ -55,10 +66,10 @@
           let smallNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
           let bigNumbers = [25, 50, 75, 100];
           let bigCount = randomInt(5);
+          this.bigCount = bigCount;
           let smallCount = 6 - bigCount;
           let bigs = bigCount == 4 ? bigNumbers : select(bigCount, bigNumbers);
           let smalls = select(smallCount, smallNumbers);
-          document.getElementsByTagName('body')[0].style.backgroundImage = 'url(countdown' + bigCount + '.jpg)';
           return bigs.concat(smalls);
         },
         showNumbers(numbers) {

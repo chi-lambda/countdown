@@ -1,7 +1,36 @@
-body {
-    background-image: url(countdown1.jpg);
-    background-position: -180px 0px;
+.background {
+    position: absolute;
+    left: -180px;
+    top: 0px;
+    height: 1080px;
+    width: 1920px;
     background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 1s;
+}
+
+.background0 {
+    background-image: url(countdown0.jpg);
+}
+
+.background1 {
+    background-image: url(countdown1.jpg);
+}
+
+.background2 {
+    background-image: url(countdown2.jpg);
+}
+
+.background3 {
+    background-image: url(countdown3.jpg);
+}
+
+.background4 {
+    background-image: url(countdown4.jpg);
+}
+
+.bgVisible {
+    opacity: 1;
 }
 
 .number {
