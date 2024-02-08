@@ -46,6 +46,9 @@
           this.target = '000';
           this.numbers = [' ', ' ', ' ', ' ', ' ', ' ']
           this.solutionText = '';
+          let music = document.getElementById('music');
+          music.pause();
+          music.currentTime = 0;
           this.showNumbers(this.generateNumbers());
         },
         generateNumbers() {
