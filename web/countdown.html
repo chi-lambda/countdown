@@ -91,30 +91,31 @@
         setTarget() {
           const interval = 50;
           const count = 20;
+          const target = randomInt(900) + 100;
+          setTimeout(this.runSolver, 10, target);
           let timerF = (i) => {
-            this.target = randomInt(900) + 100;
             if (i < count) {
+              this.target = randomInt(900) + 100;
               setTimeout(timerF, interval, i + 1);
             } else {
+              this.target = this.solution.v;
+              this.solutionText = this.solution ? this.solution.v : "No solution";
               let music = document.getElementById('music');
               music.play();
-              setTimeout(this.runSolver, 10);
             }
           }
           setTimeout(timerF, 1000, 0);
         },
-        runSolver() {
-          let solutions = solve(this.target, this.numbers);
+        runSolver(target) {
+          let solutions = solve(target, this.numbers);
           for (let i = 0; i <= 10; i++) {
             if (solutions[i]) {
               console.log(solutions[i].map(e => show(e)));
               this.solution = solutions[i].toSorted((a, b) => a.size - b.size)[0];
-              this.solutionText = this.solution.v;
               return;
             }
           }
           this.solution = null;
-          this.solutionText = 'No solution';
         },
         showSolution() {
           this.solutionText = show(this.solution);
