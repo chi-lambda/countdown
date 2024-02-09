@@ -98,7 +98,7 @@
             } else {
               let music = document.getElementById('music');
               music.play();
-              this.runSolver();
+              setTimeout(this.runSolver, 10);
             }
           }
           setTimeout(timerF, 1000, 0);
