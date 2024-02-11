@@ -1,8 +1,7 @@
 function solve(target, numbers) {
     let terms = findTerms(numbers.toReversed(), {});
-    let relevantTerms = terms.filter(e => Math.abs(e.v - target) <= 10);
-    let groupedTerms = Object.groupBy(relevantTerms, e => Math.abs(e.v - target));
-    return groupedTerms;
+    let legalTerms = terms.filter(t => 100 <= t.v && t.v <= 999);
+    return legalTerms;
 }
 
 function subdivide(numbers) {

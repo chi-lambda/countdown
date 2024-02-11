@@ -83,12 +83,12 @@
             if (i > 0) {
               setTimeout(timerF, interval, i - 1);
             } else {
-              vue.setTarget();
+              vue.shuffleTarget();
             }
           }
           setTimeout(timerF, 300, 5);
         },
-        setTarget() {
+        shuffleTarget() {
           const interval = 50;
           const count = 20;
           const target = randomInt(900) + 100;
@@ -98,8 +98,8 @@
               this.target = randomInt(900) + 100;
               setTimeout(timerF, interval, i + 1);
             } else {
-              this.target = this.solution ? this.solution.v : this.target;
-              this.solutionText = this.solution ? this.solution.v : "No solution";
+              this.target = this.solution.v;
+              this.solutionText = this.solution.v;
               let music = document.getElementById('music');
               music.play();
             }
@@ -108,14 +108,10 @@
         },
         runSolver(target) {
           let solutions = solve(target, this.numbers);
-          for (let i = 0; i <= 10; i++) {
-            if (solutions[i]) {
-              console.log(solutions[i].map(e => show(e)));
-              this.solution = solutions[i].toSorted((a, b) => a.size - b.size)[0];
-              return;
-            }
-          }
-          this.runSolver(randomInt(900) + 100);
+          let count = solutions.length;
+          let solution = solutions[randomInt(count)];
+          console.log(show(solution));
+          this.solution = solution;
         },
         showSolution() {
           this.solutionText = show(this.solution);
