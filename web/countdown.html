@@ -98,7 +98,7 @@
               this.target = randomInt(900) + 100;
               setTimeout(timerF, interval, i + 1);
             } else {
-              this.target = this.solution.v;
+              this.target = this.solution ? this.solution.v : this.target;
               this.solutionText = this.solution ? this.solution.v : "No solution";
               let music = document.getElementById('music');
               music.play();
