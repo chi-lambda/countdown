@@ -50,10 +50,15 @@
         target: '000',
         numbers: [' ', ' ', ' ', ' ', ' ', ' '],
         solution: null,
-        solutionText: ''
+        solutionText: '',
+        state: 'solved'
       },
       methods: {
         reset() {
+          if (this.state === 'solving'){
+            return;
+          }
+          this.state = 'solving';
           this.target = '000';
           this.numbers = [' ', ' ', ' ', ' ', ' ', ' ']
           this.solutionText = '';
@@ -115,6 +120,7 @@
         },
         showSolution() {
           this.solutionText = show(this.solution);
+          this.state = 'solved';
         }
       },
       created() {
