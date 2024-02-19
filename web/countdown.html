@@ -104,6 +104,7 @@
               setTimeout(timerF, interval, i + 1);
             } else {
               this.target = this.solution.v;
+              window.location.hash = this.numbers.join(',');
               this.state = 'solving';
               let music = document.getElementById('music');
               music.play();
@@ -138,7 +139,12 @@
         }
       },
       created() {
-        this.reset();
+        if (window.location.hash === '') {
+          this.reset();
+        } else {
+          let numbers = window.location.hash.substring(1).split(',').map(x => x | 0);
+          this.showNumbers(numbers);
+        }
       }
     });
 
