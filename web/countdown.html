@@ -88,7 +88,7 @@
             if (i > 0) {
               setTimeout(timerF, interval, i - 1);
             } else {
-              vue.shuffleTarget();
+              this.shuffleTarget();
             }
           }
           setTimeout(timerF, 300, 5);
@@ -127,7 +127,6 @@
           this.state = 'solved';
         },
         rachel() {
-          console.log(this.state);
           if (this.state === 'solving') {
             this.showSolution();
             return;
@@ -148,7 +147,10 @@
       }
     });
 
-    this.vue = app;
+    addEventListener('popstate', () => {
+      app.numbers = window.location.hash.substring(1).split(',').map(x => x | 0);
+      app.shuffleTarget();
+    });
 
   </script>
 </body>
