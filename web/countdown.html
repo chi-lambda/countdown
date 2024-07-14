@@ -22,8 +22,9 @@
     <div class="background4 background" :class="{bgVisible: bigCount == 4}"></div>
     <div id="targetnumber"><span @click="reset">{{ target }}</span></div>
     <div id="numbers">
-      <div class="number" v-for="number in numbers"><span class="number-inner" :class="{compress: number == 100}">{{
-          number }}</span></div>
+      <div class="number" v-for="number in numbers" :class="{ solution: number.solution }"><span class="number-inner"
+          :class="{compress: number.v == 100}">{{
+          number.v }}</span></div>
     </div>
     <div id="solution" @click="showSolution">{{ solutionText }}</div>
     <div id="rachel" @click="rachel"></div>
@@ -67,6 +68,9 @@
           music.currentTime = 0;
           this.showNumbers(this.generateNumbers());
         },
+        toNumber(n) {
+          return ({ v: n, solution: false });
+        },
         generateNumbers() {
           let smallNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
           let bigNumbers = [25, 50, 75, 100];
@@ -75,14 +79,14 @@
           let smallCount = 6 - bigCount;
           let bigs = select(bigCount, bigNumbers);
           let smalls = select(smallCount, smallNumbers);
-          return bigs.concat(smalls);
+          return bigs.concat(smalls).map(this.toNumber);
         },
         showNumbers(numbers) {
           let interval = 700;
           let timerF = (i) => {
-            let ns = [' ', ' ', ' ', ' ', ' ', ' '];
+            let ns = [' ', ' ', ' ', ' ', ' ', ' '].map(this.toNumber);
             for (let j = i; j < 6; j++) {
-              ns[j] = numbers[j];
+              ns[j].v = numbers[j].v;
             }
             this.numbers = ns;
             if (i > 0) {
@@ -104,7 +108,7 @@
               setTimeout(timerF, interval, i + 1);
             } else {
               this.target = this.solution.v;
-              window.location.hash = this.numbers.join(',') + ',' + this.target;
+              window.location.hash = this.numbers.map(n => n.v).join(',') + ',' + this.target;
               this.state = 'solving';
               let music = document.getElementById('music');
               music.play();
@@ -113,7 +117,7 @@
           setTimeout(timerF, 1000, 0);
         },
         runSolver() {
-          let solutions = solve(this.numbers);
+          let solutions = solve(this.numbers.map(n => n.v));
           let count = solutions.length;
           let solution = solutions[randomInt(count)];
           console.log(show(solution));
@@ -123,7 +127,16 @@
           if (this.state !== 'solving') {
             return;
           }
-          this.solutionText = this.solution.size + ': ' + show(this.solution);
+          this.solutionText = show(this.solution);
+          let solutionNumbers = numbers(this.solution);
+          for (let i = 0; i < 6; i++) {
+            let idx = solutionNumbers.findIndex(n => n == this.numbers[i].v);
+            if (idx >= 0) {
+              this.numbers[i].solution = true;
+              solutionNumbers.splice(idx, 1);
+              if (solutionNumbers.length == 0) { break; }
+            }
+          }
           this.state = 'solved';
         },
         rachel() {
@@ -142,10 +155,10 @@
           this.reset();
         } else {
           let numbers = window.location.hash.substring(1).split(',').map(x => x | 0);
-          this.numbers = numbers.slice(0, 6);
+          this.numbers = numbers.slice(0, 6).map(this.toNumber);
           this.target = numbers[6];
-          this.bigCount = this.numbers.filter(x => x > 10).length;
-          let solutions = solve(this.target, this.numbers);
+          this.bigCount = this.numbers.filter(x => x.v > 10).length;
+          let solutions = solve(this.numbers.map(n => n.v));
           this.solution = solutions.filter(s => s.v == this.target)[0];
           this.state = 'solving';
         }
