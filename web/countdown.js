@@ -1,4 +1,4 @@
-function solve(target, numbers) {
+function solve(numbers) {
     let terms = findTerms(numbers.toReversed(), {});
     let legalTerms = terms.filter(t => 100 <= t.v && t.v <= 999);
     return legalTerms;

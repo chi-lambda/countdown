@@ -97,7 +97,7 @@
           const interval = 50;
           const count = 20;
           const target = randomInt(900) + 100;
-          setTimeout(this.runSolver, 10, target);
+          setTimeout(this.runSolver, 10);
           let timerF = (i) => {
             if (i < count) {
               this.target = randomInt(900) + 100;
@@ -112,8 +112,8 @@
           }
           setTimeout(timerF, 1000, 0);
         },
-        runSolver(target) {
-          let solutions = solve(target, this.numbers);
+        runSolver() {
+          let solutions = solve(this.numbers);
           let count = solutions.length;
           let solution = solutions[randomInt(count)];
           console.log(show(solution));
