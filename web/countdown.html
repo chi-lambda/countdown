@@ -104,7 +104,7 @@
               setTimeout(timerF, interval, i + 1);
             } else {
               this.target = this.solution.v;
-              window.location.hash = this.numbers.join(',');
+              window.location.hash = this.numbers.join(',') + ',' + this.target;
               this.state = 'solving';
               let music = document.getElementById('music');
               music.play();
@@ -142,7 +142,12 @@
           this.reset();
         } else {
           let numbers = window.location.hash.substring(1).split(',').map(x => x | 0);
-          this.showNumbers(numbers);
+          this.numbers = numbers.slice(0, 6);
+          this.target = numbers[6];
+          this.bigCount = this.numbers.filter(x => x > 10).length;
+          let solutions = solve(this.target, this.numbers);
+          this.solution = solutions.filter(s => s.v == this.target)[0];
+          this.state = 'solving';
         }
       }
     });
