@@ -73,7 +73,7 @@
           let bigCount = randomInt(5);
           this.bigCount = bigCount;
           let smallCount = 6 - bigCount;
-          let bigs = bigCount == 4 ? bigNumbers : select(bigCount, bigNumbers);
+          let bigs = select(bigCount, bigNumbers);
           let smalls = select(smallCount, smallNumbers);
           return bigs.concat(smalls);
         },
