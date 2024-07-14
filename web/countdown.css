@@ -62,6 +62,10 @@ body {
     display: inline-block;
 }
 
+.number.solution {
+    text-shadow: yellow 0px 0px 50px, yellow 0px 0px 50px, yellow 0px 0px 50px;
+}
+
 .number-inner {
     display: inline-block;
     transform: translateY(0px);
