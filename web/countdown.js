@@ -49,7 +49,7 @@ function findTerms(numbers, memo) {
     if (memo[numbers]) {
         return memo[numbers];
     }
-    let ops = ['+', '-', '*', '/'];
+    let ops = ['-', '+', '*', '/'];
     let subdivisions = subdivide(numbers);
     let result = {}
     for (let n of numbers) {
