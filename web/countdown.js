@@ -98,3 +98,17 @@ function show(term) {
     let right = term.right.type === 'single' ? show(term.right) : '(' + show(term.right) + ')';
     return left + ' ' + term.op + ' ' + right + ' = ' + evaluate(term.op, term.left, term.right);
 }
+
+function numbers(term) {
+    let result = [];
+    function walk(tree) {
+        if (tree.type == 'single') {
+            result.push(tree.v);
+            return;
+        }
+        walk(tree.left);
+        walk(tree.right);
+    }
+    walk(term);
+    return result;
+}
