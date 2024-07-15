@@ -124,3 +124,7 @@ body {
     height: 820px;
     width: 335px;
 }
+
+.solution-number {
+    color: green;
+}

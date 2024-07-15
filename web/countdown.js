@@ -87,7 +87,7 @@ function findSummands(term) {
 
 function show(term) {
     if (term.type === 'single') {
-        return term.v.toString();
+        return '<b class="solution-number">' + term.v.toString() + '</b>';
     }
     if (term.op === '+') {
         let summands = findSummands(term);

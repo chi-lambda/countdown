@@ -26,7 +26,7 @@
           :class="{compress: number.v == 100}">{{
           number.v }}</span></div>
     </div>
-    <div id="solution" @click="showSolution">{{ solutionText }}</div>
+    <div id="solution" @click="showSolution" v-html="solutionText"></div>
     <div id="rachel" @click="rachel"></div>
     <audio id="music" playsinline>
       <source src="countdown.webm" type="audio/webm">
